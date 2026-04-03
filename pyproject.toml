@@ -1,7 +1,7 @@
 [project]
-name = "neo4j-databricks-demo"
+name = "graph-augmented-ai-workshop"
 version = "0.1.0"
-description = "Demo project for Neo4j and Databricks integration"
+description = "Hands-on workshop for building graph-augmented AI systems with Neo4j and Databricks"
 requires-python = ">=3.10"
 dependencies = [
     # Databricks SDK - https://pypi.org/project/databricks-sdk/

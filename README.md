@@ -223,7 +223,7 @@ After completing the setup steps above, proceed through the labs in order:
 ## Project Structure
 
 ```
-neo4j-databricks-demo/
+graph-augmented-ai-workshop/
 ├── README.md                              # This file
 ├── docs/
 │   ├── SCHEMA_MODEL_OVERVIEW.md           # Detailed graph schema documentation

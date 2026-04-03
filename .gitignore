@@ -122,6 +122,9 @@ $RECYCLE.BIN/
 .databricks
 databricks.yml
 
+# Exported slide PDFs
+docs/export/
+
 # Agent output
 results.json
 mlruns/
