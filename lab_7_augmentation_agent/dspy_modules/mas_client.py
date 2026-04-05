@@ -1,9 +1,9 @@
 """
-Multi-Agent Supervisor Client for Graph Augmentation Analysis.
+Supervisor Agent Client for Graph Augmentation Analysis.
 
-This module queries the Multi-Agent Supervisor (MAS) endpoint from Lab 6
+This module queries the Supervisor Agent (MAS) endpoint from Lab 6
 to perform gap analysis between structured graph data (via Genie) and
-unstructured documents (via Knowledge Agent).
+unstructured documents (via Knowledge Assistant).
 
 The MAS coordinates both agents to answer questions that span the
 structured-unstructured divide, which is the core capability needed
@@ -41,7 +41,7 @@ DEFAULT_ENDPOINT: Final[str] = os.environ.get("MAS_ENDPOINT_NAME", "mas-3ae5a347
 # =============================================================================
 # GAP ANALYSIS QUERIES
 # These queries leverage the MAS to combine structured data (Genie) with
-# unstructured documents (Knowledge Agent) to find enrichment opportunities.
+# unstructured documents (Knowledge Assistant) to find enrichment opportunities.
 # =============================================================================
 
 INTEREST_HOLDING_GAP_QUERY: Final[str] = """
@@ -177,9 +177,9 @@ class GapAnalysisResult:
 
 class MASClient:
     """
-    Client for querying the Multi-Agent Supervisor endpoint.
+    Client for querying the Supervisor Agent endpoint.
 
-    The MAS coordinates Genie (structured data) and Knowledge Agent
+    The MAS coordinates Genie (structured data) and Knowledge Assistant
     (unstructured documents) to answer questions that span both data types.
     This is essential for graph augmentation, which requires comparing
     what's in the graph against what's in the documents.
@@ -358,7 +358,7 @@ class MASClient:
 
 def fetch_gap_analysis(endpoint_name: str | None = None) -> str:
     """
-    Fetch comprehensive gap analysis from the Multi-Agent Supervisor.
+    Fetch comprehensive gap analysis from the Supervisor Agent.
 
     This queries the MAS to identify gaps between structured graph data
     and unstructured documents - the core input for graph augmentation.
@@ -378,7 +378,7 @@ def fetch_gap_analysis(endpoint_name: str | None = None) -> str:
     print("STEP 1: QUERYING MULTI-AGENT SUPERVISOR FOR GAP ANALYSIS")
     print("=" * 60)
     print("  The MAS coordinates Genie (structured data) and")
-    print("  Knowledge Agent (documents) to find enrichment opportunities.")
+    print("  Knowledge Assistant (documents) to find enrichment opportunities.")
     print("  This may take 1-3 minutes as the MAS routes to multiple agents...")
     print("")
 

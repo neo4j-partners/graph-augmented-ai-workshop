@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "augmentation_agent"
+version = "0.1.0"
+description = "Lab 7: Graph Augmentation Agent — DSPy structured analysis for Neo4j enrichment"
+requires-python = ">=3.10"
+dependencies = [
+    "dspy>=3.0.4",
+    "databricks-sdk",
+    "pydantic>=2.0",
+    "databricks-job-runner",
+]
+
+[tool.uv.sources]
+databricks-job-runner = { path = "/Users/ryanknight/projects/databricks/databricks-job-runner", editable = true }
+
+[tool.setuptools.packages.find]
+include = ["augmentation_agent*"]

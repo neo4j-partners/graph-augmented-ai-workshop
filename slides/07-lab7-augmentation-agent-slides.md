@@ -32,13 +32,13 @@ table { font-size: 20px; }
 **Why DSPy?**
 - Declarative approach: define *what* you want, not *how* to prompt
 - Native structured output via Pydantic models
-- Works reliably with Databricks Multi-Agent Supervisor endpoints
+- Works reliably with Databricks Supervisor Agent endpoints
 
 ---
 
 ## The Goal
 
-Build a **DSPy Agent** that uses the Multi-Agent Supervisor to **analyze documents** and **suggest graph enrichments**.
+Build a **DSPy Agent** that uses the Supervisor Agent to **analyze documents** and **suggest graph enrichments**.
 
 ```
 ┌──────────────────┐      ┌─────────────────────────┐      ┌──────────────────┐
@@ -50,7 +50,7 @@ Build a **DSPy Agent** that uses the Multi-Agent Supervisor to **analyze documen
 
 **Why this architecture?**
 - DSPy provides type-safe structured output from LLM calls
-- Multi-Agent Supervisor routes queries to specialized agents (Genie + Knowledge)
+- Supervisor Agent routes queries to specialized agents (Genie + Knowledge)
 
 ---
 
@@ -65,8 +65,8 @@ MAS Query (one time)          →    Same gap_analysis data    →    4 Differen
 ```
 
 **Stage 1: MAS Query (Direct API Call)**
-- Sends comprehensive prompt to Multi-Agent Supervisor
-- MAS coordinates Genie (structured) + Knowledge Agent (documents)
+- Sends comprehensive prompt to Supervisor Agent
+- MAS coordinates Genie (structured) + Knowledge Assistant (documents)
 - Returns **raw text** analysis comparing both sources
 
 **Stage 2: DSPy Analyzers (Structured Extraction)**
@@ -123,7 +123,7 @@ extract = dspy.Predict(ThemeSignature)
 result = extract(document="...")  # Returns typed Pydantic objects!
 ```
 
-**Result:** Provides reliable structured output from Multi-Agent Supervisor - no manual JSON parsing.
+**Result:** Provides reliable structured output from Supervisor Agent - no manual JSON parsing.
 
 ---
 
@@ -156,7 +156,7 @@ Each analysis returns **typed Pydantic objects** with structured suggestions for
 │              Knowledge            Genie Agent                    │
 │                Agent                                             │
 │                    ↓                   ↓                         │
-│              Multi-Agent Supervisor                              │
+│              Supervisor Agent                              │
 │                         ↓                                        │
 │              Graph Augmentation Suggestions                      │
 └─────────────────────────────────────────────────────────────────┘

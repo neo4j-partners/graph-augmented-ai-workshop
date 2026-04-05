@@ -5,6 +5,9 @@ This module contains DSPy modules that perform the actual analysis work.
 Each analyzer wraps a DSPy predictor (ChainOfThought) with a signature
 and provides a clean interface for the main agent.
 
+The composite ``GraphAugmentationAnalyzer`` uses ``dspy.Parallel`` to run
+all four analyses concurrently for lower total latency.
+
 DSPy modules handle:
 - Prompt generation from signatures
 - Language model invocation
@@ -228,8 +231,10 @@ class GraphAugmentationAnalyzer(dspy.Module):
     """
     Composite analyzer that runs all analysis types and consolidates results.
 
-    This module orchestrates the individual analyzers and builds
-    a unified AugmentationResponse from their outputs.
+    Uses ``dspy.Parallel`` to run the individual analyzers concurrently,
+    which significantly reduces total latency compared to sequential execution.
+    ``dspy.Parallel`` properly propagates DSPy's thread-local settings
+    (configured LM, adapter, etc.) to each worker thread.
     """
 
     def __init__(self):
@@ -238,6 +243,13 @@ class GraphAugmentationAnalyzer(dspy.Module):
         self.new_entities = NewEntitiesAnalyzer()
         self.missing_attributes = MissingAttributesAnalyzer()
         self.implied_relationships = ImpliedRelationshipsAnalyzer()
+
+        self._analyzer_map: dict[str, dspy.Module] = {
+            "investment_themes": self.investment_themes,
+            "new_entities": self.new_entities,
+            "missing_attributes": self.missing_attributes,
+            "implied_relationships": self.implied_relationships,
+        }
 
     def forward(
         self,
@@ -256,74 +268,59 @@ class GraphAugmentationAnalyzer(dspy.Module):
         Returns:
             AugmentationResponse with all analysis results consolidated.
         """
-        all_analyses = (
-            "investment_themes",
-            "new_entities",
-            "missing_attributes",
-            "implied_relationships",
-        )
-        to_run = analyses_to_run or list(all_analyses)
+        to_run = analyses_to_run or list(self._analyzer_map)
+        to_run = [a for a in to_run if a in self._analyzer_map]
 
-        analysis = AugmentationAnalysis()
+        # Build (module, Example) pairs for dspy.Parallel
+        example = dspy.Example(
+            document_context=document_context,
+        ).with_inputs("document_context")
+        exec_pairs = [(self._analyzer_map[name], example) for name in to_run]
 
-        # Collect all suggestions for consolidation
-        all_nodes: list[SuggestedNode] = []
-        all_relationships: list[SuggestedRelationship] = []
-        all_attributes: list[SuggestedAttribute] = []
-
-        # Track success for final response
-        any_success = False
-
-        # Run each requested analysis - each returns a specific typed result
+        print(f"\n  Running {len(exec_pairs)} analyses concurrently via dspy.Parallel...")
         total_start = time.time()
-        for i, analysis_type in enumerate(to_run, 1):
-            if analysis_type not in all_analyses:
-                continue
 
-            print(f"\n  [{i}/{len(to_run)}] Running {analysis_type} analysis...")
-            start_time = time.time()
-
-            if analysis_type == "investment_themes":
-                result = self.investment_themes(document_context)
-                if result.success and result.data:
-                    analysis.investment_themes = result.data
-                    any_success = True
-                status = "OK" if result.success else f"FAILED: {result.error}"
-
-            elif analysis_type == "new_entities":
-                result = self.new_entities(document_context)
-                if result.success and result.data:
-                    analysis.new_entities = result.data
-                    all_nodes.extend(result.data.suggested_nodes)
-                    any_success = True
-                status = "OK" if result.success else f"FAILED: {result.error}"
-
-            elif analysis_type == "missing_attributes":
-                result = self.missing_attributes(document_context)
-                if result.success and result.data:
-                    analysis.missing_attributes = result.data
-                    all_attributes.extend(result.data.suggested_attributes)
-                    any_success = True
-                status = "OK" if result.success else f"FAILED: {result.error}"
-
-            elif analysis_type == "implied_relationships":
-                result = self.implied_relationships(document_context)
-                if result.success and result.data:
-                    analysis.implied_relationships = result.data
-                    all_relationships.extend(result.data.suggested_relationships)
-                    any_success = True
-                status = "OK" if result.success else f"FAILED: {result.error}"
-
-            else:
-                status = "SKIPPED"
-
-            elapsed = time.time() - start_time
-            print(f"       [{status}] ({elapsed:.1f}s)")
+        parallel = dspy.Parallel(
+            num_threads=len(exec_pairs),
+            max_errors=len(exec_pairs),
+            provide_traceback=True,
+        )
+        raw_results = parallel(exec_pairs)
 
         total_elapsed = time.time() - total_start
         print(f"\n  All analyses completed in {total_elapsed:.1f}s")
 
-        # Build the consolidated response
+        # Consolidate results
+        analysis = AugmentationAnalysis()
+        all_nodes: list[SuggestedNode] = []
+        all_relationships: list[SuggestedRelationship] = []
+        all_attributes: list[SuggestedAttribute] = []
+        any_success = False
+
+        for name, result in zip(to_run, raw_results):
+            if result is None:
+                print(f"  [{name}] FAILED: returned None")
+                continue
+
+            status = "OK" if result.success else f"FAILED: {result.error}"
+            print(f"  [{name}] {status}")
+
+            if not result.success or result.data is None:
+                continue
+
+            any_success = True
+            if name == "investment_themes":
+                analysis.investment_themes = result.data
+            elif name == "new_entities":
+                analysis.new_entities = result.data
+                all_nodes.extend(result.data.suggested_nodes)
+            elif name == "missing_attributes":
+                analysis.missing_attributes = result.data
+                all_attributes.extend(result.data.suggested_attributes)
+            elif name == "implied_relationships":
+                analysis.implied_relationships = result.data
+                all_relationships.extend(result.data.suggested_relationships)
+
         response = AugmentationResponse(
             success=any_success,
             analysis=analysis,
@@ -353,16 +350,9 @@ class GraphAugmentationAnalyzer(dspy.Module):
         Raises:
             ValueError: If analysis_type is not recognized.
         """
-        if analysis_type == "investment_themes":
-            return self.investment_themes(document_context)
-        elif analysis_type == "new_entities":
-            return self.new_entities(document_context)
-        elif analysis_type == "missing_attributes":
-            return self.missing_attributes(document_context)
-        elif analysis_type == "implied_relationships":
-            return self.implied_relationships(document_context)
-        else:
+        if analysis_type not in self._analyzer_map:
             raise ValueError(
                 f"Unknown analysis type: {analysis_type}. "
-                f"Must be one of: investment_themes, new_entities, missing_attributes, implied_relationships"
+                f"Must be one of: {list(self._analyzer_map)}"
             )
+        return self._analyzer_map[analysis_type](document_context)

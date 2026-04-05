@@ -7,7 +7,7 @@ This lab exports graph data from Neo4j back to Databricks as Delta Lake tables, 
 Before running this lab, ensure you have:
 
 1. Completed the setup steps in the main [README.md](../README.md)
-2. Completed [Lab 2](../lab_2_neo4j_import/README.md) to populate Neo4j with data
+2. Completed [1 - Neo4j Import](../labs/1%20-%20Neo4j%20Import.py) to populate Neo4j with data
 3. A Databricks cluster with the Neo4j Spark Connector installed
 
 ## Cluster Requirements
@@ -130,4 +130,4 @@ After export, your Unity Catalog will contain:
 
 ## Next Steps
 
-Continue to [Lab 5: Create AI Agents](../lab_5_ai_agents/README.md) to set up Databricks Genie and Knowledge Agents for natural language queries.
+Continue to [Lab 5: Create AI Agents](../lab_5_ai_agents/README.md) to set up Databricks Genie and Knowledge Assistants for natural language queries.

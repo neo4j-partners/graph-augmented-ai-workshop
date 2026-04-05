@@ -14,7 +14,7 @@ code { font-size: 18px; }
 table { font-size: 20px; }
 </style>
 
-# Lab 6: Multi-Agent Supervisor
+# Lab 6: Supervisor Agent
 ## Combining Structured + Unstructured
 
 ---
@@ -40,7 +40,7 @@ table { font-size: 20px; }
 
 ```
                     ┌─────────────────────────┐
-                    │  Multi-Agent Supervisor │
+                    │  Supervisor Agent │
                     │   (Routes Questions)    │
                     └───────────┬─────────────┘
                                 │

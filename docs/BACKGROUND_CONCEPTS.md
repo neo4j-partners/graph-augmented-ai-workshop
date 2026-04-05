@@ -2,7 +2,7 @@
 
 Your customer's profile mentions renewable energy investments. Their portfolio holds zero renewable energy stocks. Somewhere between that PDF document and your database, valuable context got lost. This guide explains the technologies that bridge that gap.
 
-If terms like "lakehouse architecture," "multi-agent orchestration," or "graph data science" feel unfamiliar, start here before reading the main [Agent-Augmented Knowledge Graphs](GRAPH_AUGMENTATION.md) blog post. The concepts build on each other, so working through them in order will make the integration patterns click faster.
+If terms like "lakehouse architecture," "multi-agent orchestration," or "graph data science" feel unfamiliar, start here before diving into the workshop labs. The concepts build on each other, so working through them in order will make the integration patterns click faster.
 
 ## Databricks Lakehouse Architecture
 
@@ -187,7 +187,7 @@ The agent searches the `renewable_energy_investment_trends.txt` document, identi
 
 Real questions rarely fit neatly into either structured or unstructured categories. "Find customers who mentioned renewable energy in their profiles but don't hold any renewable energy stocks" requires both document analysis and database queries. Neither agent alone can answer it.
 
-The Multi-Agent Supervisor coordinates multiple specialized agents, routing subtasks to whichever agent can handle them and synthesizing the results.
+The Supervisor Agent coordinates multiple specialized agents, routing subtasks to whichever agent can handle them and synthesizing the results.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -240,7 +240,7 @@ The Multi-Agent Supervisor coordinates multiple specialized agents, routing subt
 
 This orchestration pattern scales to more complex scenarios. An enterprise might deploy a Genie agent for sales data, another for inventory, a Knowledge Assistant for contract documents, and a third agent for customer support tickets. The supervisor routes questions to whichever combination of agents can provide the complete answer.
 
-Databricks released the Multi-Agent Supervisor as a configurable "Agent Brick" in 2025, reducing the implementation effort from custom orchestration code to configuration. Organizations can also integrate Genie with external platforms through managed MCP (Model Context Protocol) servers, connecting Databricks agents to Microsoft Copilot Studio or Azure AI Foundry.
+Databricks released the Supervisor Agent as a configurable "Agent Brick" in 2025, reducing the implementation effort from custom orchestration code to configuration. Organizations can also integrate Genie with external platforms through managed MCP (Model Context Protocol) servers, connecting Databricks agents to Microsoft Copilot Studio or Azure AI Foundry.
 
 ## Knowledge Graphs
 
@@ -564,7 +564,7 @@ The flow works like this:
 
 3. **Analyze Documents**: The Knowledge Assistant searches Unity Catalog volumes for relevant documents. "What investment interests does James Anderson express?" triggers vector search across customer profiles, extracting mentions of renewable energy, ESG investing, or other themes.
 
-4. **Orchestrate**: The Multi-Agent Supervisor coordinates both agents for complex questions. It might first ask the Knowledge Assistant which customers mentioned renewable energy, then ask Genie for those customers' current holdings, then compare the results to identify gaps.
+4. **Orchestrate**: The Supervisor Agent coordinates both agents for complex questions. It might first ask the Knowledge Assistant which customers mentioned renewable energy, then ask Genie for those customers' current holdings, then compare the results to identify gaps.
 
 5. **Validate**: Before creating new relationships, agents check the ontology. If `INTERESTED_IN` already exists as a relationship type, they create instances of it. If not, they propose adding a new type through a governance workflow.
 
@@ -590,13 +590,11 @@ No architecture is free of tradeoffs. Understanding the limitations helps set re
 
 ## Further Reading
 
-For implementation details and step-by-step setup instructions, continue to the main [Agent-Augmented Knowledge Graphs](GRAPH_AUGMENTATION.md) blog post. That document covers the retail investment use case in depth, including agent configuration, prompt engineering considerations, and the complete data flow from Neo4j through enrichment and back.
-
 **External Resources:**
 
 - [Databricks AI/BI Genie Documentation](https://docs.databricks.com/aws/en/genie/)
 - [Neo4j Graph Data Science Manual v2.23](https://neo4j.com/docs/graph-data-science/current/)
 - [Unity Catalog Overview](https://docs.databricks.com/aws/en/data-governance/unity-catalog/)
-- [Multi-Agent Supervisor in Databricks](https://docs.databricks.com/aws/en/generative-ai/agent-bricks/multi-agent-supervisor)
+- [Supervisor Agent in Databricks](https://docs.databricks.com/aws/en/generative-ai/agent-bricks/multi-agent-supervisor)
 - [GraphRAG and Agentic Architecture with Neo4j](https://neo4j.com/blog/developer/graphrag-and-agentic-architecture-with-neoconverse/)
 - [Zep: Temporal Knowledge Graphs for Agent Memory](https://arxiv.org/html/2501.13956v1)

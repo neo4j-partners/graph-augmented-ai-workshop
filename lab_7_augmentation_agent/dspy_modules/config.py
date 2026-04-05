@@ -1,12 +1,12 @@
 """
-DSPy Language Model Configuration for Databricks Multi-Agent Supervisor.
+DSPy Language Model Configuration for Databricks Supervisor Agent.
 
 This module handles the configuration of DSPy to work with Databricks
-Multi-Agent Supervisor (MAS) endpoints created in Lab 6. It supports both
+Supervisor Agent (MAS) endpoints created in Lab 6. It supports both
 automatic authentication when running on Databricks and manual authentication
 via environment variables.
 
-The MAS endpoint routes queries to the Genie + Knowledge Agent for combined
+The MAS endpoint routes queries to the Genie + Knowledge Assistant for combined
 structured and unstructured data analysis.
 
 References:
@@ -18,10 +18,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Final
 
 import dspy
-from dspy.clients.lm import LM
 from dotenv import load_dotenv
 
 # Load .env from project root
@@ -44,23 +44,22 @@ for var in _CONFLICTING_AUTH_VARS:
 DEFAULT_ENDPOINT: Final[str] = os.environ.get("MAS_ENDPOINT_NAME", "mas-3ae5a347-endpoint")
 
 
-class DatabricksResponsesLM(LM):
+class DatabricksResponsesLM(dspy.BaseLM):
     """
-    Custom DSPy Language Model for Databricks Responses API endpoints.
+    DSPy LM adapter for Databricks Supervisor Agent endpoints.
 
-    This LM adapter works with Databricks Multi-Agent Supervisor endpoints
-    that use the Responses API format (input array) instead of the standard
-    OpenAI Chat Completions format (messages array).
+    Subclasses ``dspy.BaseLM`` and overrides ``forward()`` (not ``__call__``)
+    so that DSPy's built-in caching, callbacks, and history tracking all work
+    correctly.  Uses ``model_type="responses"`` so the base class routes
+    output extraction through ``_process_response()``.
 
-    The Responses API expects:
-        {
-            "input": [{"role": "user", "content": "..."}]
-        }
+    The MAS endpoint uses the Responses API format::
 
-    Instead of OpenAI's:
-        {
-            "messages": [{"role": "user", "content": "..."}]
-        }
+        POST /responses  {"input": [{"role": "user", "content": "..."}]}
+
+    MAS endpoints only support single-turn conversations, so multi-turn
+    messages produced by DSPy's ChatAdapter are combined into one user
+    message before sending.
 
     Authentication is handled automatically by WorkspaceClient:
     - On Databricks: Uses runtime's built-in authentication
@@ -79,14 +78,14 @@ class DatabricksResponsesLM(LM):
             model: The Databricks MAS endpoint name from Lab 6.
             **kwargs: Additional arguments (temperature, max_tokens, etc.)
         """
-        self._model_name = model
         self._client: Any = None
 
-        # Initialize parent with model name
-        super().__init__(model=model, **kwargs)
+        # model_type="responses" tells BaseLM._process_lm_response to use
+        # _process_response() which understands the Responses API output format.
+        super().__init__(model=model, model_type="responses", **kwargs)
 
     def _get_client(self) -> Any:
-        """Get or create the Databricks OpenAI-compatible client."""
+        """Lazily create the Databricks OpenAI-compatible client."""
         if self._client is not None:
             return self._client
 
@@ -99,66 +98,72 @@ class DatabricksResponsesLM(LM):
         except Exception as e:
             raise RuntimeError(f"Failed to create Databricks client: {e}")
 
-    def __call__(
+    def forward(
         self,
         prompt: str | None = None,
         messages: list[dict[str, Any]] | None = None,
         **kwargs: Any,
-    ) -> list[dict[str, Any]]:
+    ) -> Any:
         """
-        Call the Databricks Responses API endpoint.
+        Call the MAS endpoint and return the raw OpenAI response object.
+
+        BaseLM.__call__ (with @with_callbacks) invokes this method, then
+        passes the return value through _process_lm_response() for history
+        tracking, caching, and output extraction.
 
         Args:
             prompt: Optional prompt string (converted to user message).
             messages: List of message dicts with role and content.
-            **kwargs: Additional arguments (ignored for Responses API).
+            **kwargs: Additional arguments forwarded by BaseLM.
 
         Returns:
-            List containing response dict with 'text' key.
+            An OpenAI Responses API object that BaseLM._process_response()
+            can parse (response.output[].content[].text).
         """
         client = self._get_client()
 
-        # Build input from messages or prompt
+        # Combine multi-turn messages into a single user message for MAS
         if messages:
-            # Convert messages to single user input for Responses API
-            # Combine all messages into a single prompt
-            combined_content = ""
+            parts = []
             for msg in messages:
                 role = msg.get("role", "user")
                 content = msg.get("content", "")
                 if role == "system":
-                    combined_content += f"{content}\n\n"
+                    parts.append(content)
                 elif role == "user":
-                    combined_content += f"{content}\n"
+                    parts.append(content)
                 elif role == "assistant":
-                    combined_content += f"Assistant: {content}\n"
-            input_messages = [{"role": "user", "content": combined_content.strip()}]
+                    parts.append(f"Assistant: {content}")
+            input_messages = [{"role": "user", "content": "\n\n".join(parts)}]
         elif prompt:
             input_messages = [{"role": "user", "content": prompt}]
         else:
             raise ValueError("Either prompt or messages must be provided")
 
-        try:
-            response = client.responses.create(
-                model=self._model_name,
-                input=input_messages,
+        response = client.responses.create(
+            model=self.model,
+            input=input_messages,
+        )
+
+        # Ensure usage is present — MAS endpoints may not return token counts,
+        # but BaseLM._process_lm_response() calls dict(response.usage).
+        if not hasattr(response, "usage") or response.usage is None:
+            response.usage = SimpleNamespace(
+                prompt_tokens=0, completion_tokens=0, total_tokens=0,
             )
-            # Extract text from response
-            text = response.output[0].content[0].text
-            return [{"text": text}]
-        except Exception as e:
-            raise RuntimeError(f"Databricks API call failed: {e}")
+
+        return response
 
 
 def get_lm(
     model_name: str | None = None,
     temperature: float = 0.1,
     max_tokens: int = 4000,
-) -> LM:
+) -> DatabricksResponsesLM:
     """
     Create a DSPy Language Model configured for Databricks MAS endpoint.
 
-    This function ONLY supports Multi-Agent Supervisor endpoints from Lab 6.
+    This function ONLY supports Supervisor Agent endpoints from Lab 6.
     The MAS endpoint uses the Databricks Responses API format, which requires
     a custom LM adapter (DatabricksResponsesLM).
 
@@ -172,7 +177,7 @@ def get_lm(
         max_tokens: Maximum tokens in the response.
 
     Returns:
-        Configured dspy.LM instance for MAS endpoint.
+        Configured DatabricksResponsesLM instance for MAS endpoint.
 
     Raises:
         RuntimeError: If Databricks authentication fails.
@@ -195,16 +200,17 @@ def configure_dspy(
     temperature: float = 0.1,
     max_tokens: int = 4000,
     track_usage: bool = True,
-) -> LM:
+) -> DatabricksResponsesLM:
     """
     Configure DSPy globally with the Databricks MAS endpoint.
 
-    This sets up the default LM and adapter for all DSPy operations.
+    This sets up the default LM for all DSPy operations.
     Call this once at application startup.
 
-    This function ONLY supports Multi-Agent Supervisor endpoints from Lab 6:
-    - Uses DatabricksResponsesLM (Responses API format, not OpenAI format)
-    - Uses ChatAdapter (required for MAS, JSONAdapter not supported)
+    This function ONLY supports Supervisor Agent endpoints from Lab 6.
+    Uses DatabricksResponsesLM (Responses API format, not OpenAI format).
+    ChatAdapter is the default in DSPy 3.x and does not need to be set
+    explicitly.
 
     Args:
         model_name: The MAS endpoint name from Lab 6. If None, uses DEFAULT_ENDPOINT.
@@ -226,18 +232,15 @@ def configure_dspy(
         max_tokens=max_tokens,
     )
 
-    # MAS endpoints require ChatAdapter (JSONAdapter is not supported)
-    adapter = dspy.ChatAdapter()
-
+    # ChatAdapter is the default in DSPy 3.x — no need to set explicitly.
     dspy.configure(
         lm=lm,
-        adapter=adapter,
         track_usage=track_usage,
     )
 
     print(f"[OK] DSPy configured")
     print(f"    Endpoint: {model_name or DEFAULT_ENDPOINT}")
-    print(f"    Adapter: ChatAdapter")
+    print(f"    Adapter: ChatAdapter (default)")
     print(f"    Temperature: {temperature}")
     print(f"    Max tokens: {max_tokens}")
 

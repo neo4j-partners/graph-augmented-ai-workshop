@@ -5,7 +5,7 @@ This package contains the DSPy-based components for structured output generation
 - config: Language model configuration for Databricks
 - signatures: DSPy signatures for each analysis type
 - analyzers: DSPy modules that perform the actual analysis
-- mas_client: Client for querying the Multi-Agent Supervisor
+- mas_client: Client for querying the Supervisor Agent
 """
 
 from lab_7_augmentation_agent.dspy_modules.config import (

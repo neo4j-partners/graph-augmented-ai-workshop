@@ -73,13 +73,13 @@ Which customers have high risk profiles but conservative portfolios?
 
 ---
 
-## Knowledge Agent (Unstructured Data)
+## Knowledge Assistant (Unstructured Data)
 
-The Knowledge Agent analyzes customer profiles and research documents from the Unity Catalog Volume.
+The Knowledge Assistant analyzes customer profiles and research documents from the Unity Catalog Volume.
 
 ### Setup
 
-1. Go to **AI/BI** → **Agents** → **Create Agent** → **Knowledge Agent**
+1. Go to **AI/BI** → **Agents** → **Create Agent** → **Knowledge Assistant**
 
 2. **Basic Info**:
    - **Name**: `graph-augmentation-knowledge-assistant` (only letters, numbers, and dashes allowed)
@@ -144,7 +144,7 @@ When answering questions, cite specific details from customer profiles including
 
 ### 4. Get Endpoint Name
 
-After creating the Knowledge Agent, click the **cloud icon** in the top right corner to view the endpoint details. Copy the endpoint name (e.g., `ka-6f0994b4-endpoint`) - you'll need this in Lab 6.
+After creating the Knowledge Assistant, click the **cloud icon** in the top right corner to view the endpoint details. Copy the endpoint name (e.g., `ka-6f0994b4-endpoint`) - you'll need this in Lab 6.
 
 ### Test Queries
 
@@ -160,4 +160,4 @@ Compare the investment philosophies of First National Trust and Pacific Coast Ba
 
 ## Next Steps
 
-Continue to [Lab 6: Multi-Agent Supervisor](../lab_6_multi_agent/README.md) to combine both agents into a unified system.
+Continue to [Lab 6: Supervisor Agent](../lab_6_multi_agent/README.md) to combine both agents into a unified system.

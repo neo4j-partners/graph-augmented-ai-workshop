@@ -31,7 +31,6 @@ dependencies = [
     # MLflow for DSPy tracing (optional but recommended)
     # Reference: https://docs.databricks.com/aws/en/mlflow3/genai/tracing/integrations/dspy
     "mlflow[databricks]>=3.7",
-    # Lab 3: Vector Embeddings and Hybrid Search
     # neo4j-graphrag - Official Neo4j GraphRAG library
     # Reference: https://github.com/neo4j/neo4j-graphrag-python
     "neo4j-graphrag>=1.0.0",

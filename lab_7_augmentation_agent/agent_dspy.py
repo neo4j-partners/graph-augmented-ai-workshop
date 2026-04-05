@@ -13,7 +13,7 @@ Key advantages over the original implementation:
 - Simpler, more maintainable code
 
 Prerequisites:
-    1. Multi-Agent Supervisor from Lab 6 deployed as a Databricks serving endpoint
+    1. Supervisor Agent from Lab 6 deployed as a Databricks serving endpoint
     2. DSPy and MLflow installed (see pyproject.toml)
     3. Authentication via one of:
        - On Databricks: Automatic (runtime provides credentials)
@@ -56,9 +56,9 @@ from lab_7_augmentation_agent.dspy_modules.mas_client import fetch_gap_analysis
 # CONFIGURATION - Update these values as needed
 # =============================================================================
 
-# Multi-Agent Supervisor endpoint name
+# Supervisor Agent endpoint name
 # This MUST be the MAS endpoint created in Lab 6 (lab_6_multi_agent)
-# The agent relies on the MAS to route queries to Genie + Knowledge Agent
+# The agent relies on the MAS to route queries to Genie + Knowledge Assistant
 # Get your endpoint name from the MAS UI by clicking the cloud icon
 MAS_ENDPOINT_NAME: Final[str] = "mas-3ae5a347-endpoint"
 
@@ -138,7 +138,7 @@ class DSPyGraphAugmentationAgent:
         endpoint = model_name or MAS_ENDPOINT_NAME
 
         # Configure DSPy globally with MAS endpoint
-        # (MAS endpoints use Responses API format and require ChatAdapter)
+        # (MAS endpoints use Responses API format via DatabricksResponsesLM)
         configure_dspy(
             model_name=endpoint,
             temperature=temperature,

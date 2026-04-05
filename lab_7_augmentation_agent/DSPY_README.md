@@ -94,9 +94,9 @@ class NewEntitiesAnalyzer(dspy.Module):
         return result.analysis  # Typed NewEntitiesAnalysis
 ```
 
-### Custom LM Adapter for Multi-Agent Supervisor
+### Custom LM Adapter for Supervisor Agent
 
-The agent includes a custom `DatabricksResponsesLM` class that works with Multi-Agent Supervisor (MAS) endpoints. MAS endpoints use the Databricks Responses API format instead of OpenAI Chat Completions:
+The agent includes a custom `DatabricksResponsesLM` class that works with Supervisor Agent (MAS) endpoints. MAS endpoints use the Databricks Responses API format instead of OpenAI Chat Completions:
 
 ```python
 # Responses API format (MAS endpoints)
@@ -152,9 +152,9 @@ If DSPy fails to parse structured output, it will retry automatically. For persi
 3. Check MLflow traces to see what the model is actually returning
 4. Ensure your MAS endpoint is responding correctly (test with a simple query first)
 
-## Best Practices for DSPy with Multi-Agent Supervisor
+## Best Practices for DSPy with Supervisor Agent
 
-When building DSPy agents that use Databricks Multi-Agent Supervisor (MAS) endpoints for structured output, follow these best practices:
+When building DSPy agents that use Databricks Supervisor Agent (MAS) endpoints for structured output, follow these best practices:
 
 ### 1. Use the Custom LM Adapter for MAS
 
@@ -353,8 +353,8 @@ uv run python -m lab_7_augmentation_agent.agent_dspy
 │  DatabricksResponsesLM (config.py)                              │
 │    └─ Custom LM adapter for Responses API format                │
 ├─────────────────────────────────────────────────────────────────┤
-│  Multi-Agent Supervisor Endpoint                                │
-│    └─ Routes to Genie + Knowledge Agent (Lab 6)                 │
+│  Supervisor Agent Endpoint                                │
+│    └─ Routes to Genie + Knowledge Assistant (Lab 6)                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

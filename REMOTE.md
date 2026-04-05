@@ -1,5 +1,29 @@
 # Remote Validation Proposal
 
+## Open Questions
+
+1. **Lab 1 has no notebook.** `lab_1_databricks_upload/` contains `upload_to_databricks.py` (a standalone script) and no `.ipynb`. The extraction process in "How Code Gets Extracted" says to read the notebook and its companion `.py` file. Is `run_lab1.py` just a thin wrapper around the existing `upload_to_databricks.py`, or should it reimplement the logic independently?
+
+skip lab 1
+
+2. **Lab dependencies and ordering.** Lab 2 reads CSVs from the Volume (uploaded by Lab 1), Lab 3 processes HTML files from the Volume, and Lab 4 reads from Neo4j (populated by Lab 2). Must the scripts always run in sequence, or should each script be self-contained enough to run independently (e.g., by checking prerequisites and failing fast with a clear message)?
+
+3. **Destructive scripts against shared environments.** `run_lab2.py` clears Neo4j and `run_lab3.py` clears document nodes. If multiple people share a cluster or Neo4j instance, running validation could destroy someone else's work. Is there a dedicated test environment, or should the scripts include a confirmation/safety flag?
+
+4. **Credential visibility.** The proposal passes Neo4j credentials as `--arg value` command-line arguments to `spark_python_task`. These arguments are visible in the Databricks job run UI and API responses. Is this acceptable, or should the scripts read credentials from Databricks secrets instead (the project already has `scripts/setup_databricks_secrets.sh`)?
+
+5. **Why "agent_modules" for the directory name?** The scripts are validation/test scripts, not agents. Is there a reason for this name, or should it be something more descriptive like `validation_scripts/` or `lab_scripts/`?
+
+6. **Lab 7 DSPy dependencies.** Lab 7 imports from local modules (`dspy_modules/`, `schemas.py`, `utils.py`). A standalone script on a remote cluster won't have access to these unless they're also uploaded. Should `upload.sh` handle uploading the entire `lab_7_augmentation_agent/` module tree, or should `run_lab7.py` inline all the needed code?
+
+7. **Cluster setup automation.** The prerequisites list specific Maven packages and pip libraries. Is installing these a manual step documented in a README, or should there be a script (or cluster init script) that handles this?
+
+8. **Lab 1 notebook absence vs. the "no notebook" pattern.** Lab 1's `upload_to_databricks.py` already uses `argparse` and runs headlessly. Could validation for Lab 1 simply run the existing script directly rather than creating a separate `run_lab1.py`?
+
+9. **Idempotency of non-destructive scripts.** Can `run_lab1.py` (file uploads) and `run_lab4.py` (Delta table writes) be run repeatedly without side effects? Should they overwrite existing files/tables, or check-and-skip?
+
+10. **`clean.sh` scope.** The proposal says it "optionally cleans up job run history." How far back? All runs, or only runs from validation scripts? Deleting job history could remove audit trail for other jobs on the cluster.
+
 ## Problem Statement
 
 The lab notebooks in this project can only be validated by manually opening each one in a Databricks workspace and running cells interactively. There is no way to programmatically verify that the labs work end-to-end against a live Databricks cluster and Neo4j instance. If a code change breaks a lab, the only way to find out is to run through the entire workshop by hand.
@@ -27,7 +51,7 @@ When a developer wants to validate the labs, they run two commands: `./upload.sh
 | Lab 3 -- Vector Embeddings | Yes | Processes HTML documents, generates embeddings, creates vector indexes. Can verify chunk counts, index existence, and search results. |
 | Lab 4 -- Neo4j to Lakehouse | Yes | Exports graph data to Delta Lake tables. Can verify table existence and row counts. |
 | Lab 5 -- AI Agents | No | UI-only Databricks Genie/Knowledge agent configuration. Nothing to run as code. |
-| Lab 6 -- Multi-Agent Supervisor | No | UI-only agent orchestration setup. Nothing to run as code. |
+| Lab 6 -- Supervisor Agent | No | UI-only agent orchestration setup. Nothing to run as code. |
 | Lab 7 -- Augmentation Agent | Yes | Runs DSPy analysis pipeline. Can verify structured output and graph suggestions. |
 
 ## Requirements

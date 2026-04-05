@@ -78,6 +78,6 @@ The agent performs four types of analysis:
 
 - [DSPy on Databricks](https://docs.databricks.com/aws/en/generative-ai/dspy/)
 - [DSPy Signatures](https://dspy.ai/learn/programming/signatures/)
-- [Databricks Multi-Agent Supervisor](https://docs.databricks.com/aws/en/generative-ai/agent-bricks/multi-agent-supervisor)
+- [Databricks Supervisor Agent](https://docs.databricks.com/aws/en/generative-ai/agent-bricks/multi-agent-supervisor)
 
 ---

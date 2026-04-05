@@ -70,7 +70,7 @@ After this lab:
 - **7 CSV files** ready for Neo4j import
   - Customers, Banks, Accounts, Companies, Stocks, Positions, Transactions
 
-- **HTML documents** ready for Knowledge Agent indexing
+- **HTML documents** ready for Knowledge Assistant indexing
   - Customer profiles, investment research, market analysis
 
 **Next:** Import this data into Neo4j using the Spark Connector

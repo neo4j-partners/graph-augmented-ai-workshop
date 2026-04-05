@@ -1,20 +1,20 @@
-# Lab 6: Multi-Agent Supervisor
+# Lab 6: Supervisor Agent
 
-This lab combines the Genie and Knowledge Agent into a unified system that answers complex questions requiring both structured data and unstructured document analysis.
+This lab combines the Genie and Knowledge Assistant into a unified system that answers complex questions requiring both structured data and unstructured document analysis.
 
 ## Prerequisites
 
 - Completed [Lab 5](../lab_5_ai_agents/README.md) with both agents created:
   - Retail Investment Data Assistant (Genie)
-  - Customer Insights Knowledge Agent
+  - Customer Insights Knowledge Assistant
 
 ---
 
 ## Setup
 
-### 1. Create Multi-Agent Supervisor
+### 1. Create Supervisor Agent
 
-- Navigate to the **Multi-Agent Supervisor** interface
+- Navigate to the **Supervisor Agent** interface
 - Click **Build** to create a new multi-agent system
 
 ### 2. Add Agents
@@ -30,13 +30,13 @@ Click **Configure Agents** to add your agents. You can select up to 20 different
 | Agent Name | `agent-retail-investment-genie` |
 | Describe the content | `Answers questions about retail investment customers, account balances, portfolio holdings, stock positions, banking relationships, and transaction history across structured data extracted from a graph database into Delta Lake tables.` |
 
-**Agent 2: Knowledge Agent**
+**Agent 2: Knowledge Assistant**
 
 
 | Field | Value |
 |-------|-------|
 | Type | `Agent Endpoint` |
-| Agent Endpoint | Select your Knowledge Agent endpoint (e.g., `ka-6f0994b4-endpoint`) |
+| Agent Endpoint | Select your Knowledge Assistant endpoint (e.g., `ka-6f0994b4-endpoint`) |
 | Agent Name | `graph-augmentation-knowledge-assistant` |
 | Describe the content | `This knowledge base contains comprehensive customer profiles, institutional data, and investment research documents for a retail investment platform. The content includes: CUSTOMER PROFILES: Detailed narratives containing demographics, risk profiles, current account holdings, investment preferences, personal financial goals, life circumstances, stated investment interests that may not yet be reflected in portfolios, savings habits, customer service preferences, credit scores, and banking relationship history.` |
 
@@ -52,7 +52,7 @@ Click **Configure Agents** to add your agents. You can select up to 20 different
 - **Instructions**:
   ```
   You are an intelligent investment analysis system. Use the Genie agent to query
-  structured data about customers, accounts, and portfolios. Use the Knowledge Agent
+  structured data about customers, accounts, and portfolios. Use the Knowledge Assistant
   to analyze customer profiles and documents. Your goal is to:
 
   1. Identify gaps between customer interests (from profiles) and actual investments
@@ -63,7 +63,7 @@ Click **Configure Agents** to add your agents. You can select up to 20 different
 
 ### 4. Get Endpoint Name
 
-After creating the Multi-Agent Supervisor, click the **cloud icon** in the top right corner to view the endpoint details. Copy the endpoint name (e.g., `mas-01875d0e-endpoint`) - you'll need this in Lab 7.
+After creating the Supervisor Agent, click the **cloud icon** in the top right corner to view the endpoint details. Copy the endpoint name (e.g., `mas-01875d0e-endpoint`) - you'll need this in Lab 7.
 
 ---
 
@@ -91,4 +91,4 @@ See [SAMPLE_QUERIES.md](./SAMPLE_QUERIES.md) for comprehensive examples includin
 
 ## Next Steps
 
-Continue to [Lab 7: Graph Augmentation Agent](../lab_7_augmentation_agent/README.md) to use the Multi-Agent Supervisor for analyzing documents and suggesting graph enrichments.
+Continue to [Lab 7: Graph Augmentation Agent](../lab_7_augmentation_agent/README.md) to use the Supervisor Agent for analyzing documents and suggesting graph enrichments.

@@ -1,6 +1,6 @@
 # Sample Multi-Agent Queries
 
-These queries demonstrate the power of combining structured data (Genie) with unstructured document analysis (Knowledge Agent).
+These queries demonstrate the power of combining structured data (Genie) with unstructured document analysis (Knowledge Assistant).
 
 ---
 

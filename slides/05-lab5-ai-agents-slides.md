@@ -25,7 +25,7 @@ table { font-size: 20px; }
 
 **Key Concepts:**
 - **Genie** - Databricks' natural language to SQL agent for structured data
-- **Knowledge Agent** - RAG-based agent that retrieves from document collections
+- **Knowledge Assistant** - RAG-based agent that retrieves from document collections
 - **Text-to-SQL** - LLM generates SQL from natural language questions
 - **RAG (Retrieval Augmented Generation)** - Retrieve relevant documents, then generate answers
 
@@ -40,7 +40,7 @@ table { font-size: 20px; }
 | Agent | Data Type | Capability |
 |-------|-----------|------------|
 | **Genie** | Structured (Delta tables) | SQL generation from natural language |
-| **Knowledge Agent** | Unstructured (HTML docs) | Document retrieval and analysis |
+| **Knowledge Assistant** | Unstructured (HTML docs) | Document retrieval and analysis |
 
 **The Gap:** Customers have stated interests in documents that aren't reflected in their portfolio data.
 
@@ -64,7 +64,7 @@ Queries the **14 Delta tables** we exported from Neo4j.
 
 ---
 
-## Knowledge Agent (Unstructured Data)
+## Knowledge Assistant (Unstructured Data)
 
 Analyzes **HTML documents** in Unity Catalog Volumes.
 

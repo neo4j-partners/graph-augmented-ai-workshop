@@ -121,6 +121,7 @@ $RECYCLE.BIN/
 
 .databricks
 databricks.yml
+.mcp.json
 
 # Exported slide PDFs
 docs/export/
