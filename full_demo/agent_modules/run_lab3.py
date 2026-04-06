@@ -9,10 +9,16 @@ Usage:
     python -m cli upload run_lab3.py && python -m cli submit run_lab3.py
 """
 
-import argparse
 import json
+import os
 import sys
 import time
+
+# Parse KEY=VALUE parameters from cli.submit into environment variables.
+for _arg in sys.argv[1:]:
+    if "=" in _arg and not _arg.startswith("-"):
+        _key, _, _value = _arg.partition("=")
+        os.environ.setdefault(_key, _value)
 
 
 # ── Configuration ────────────────────────────────────────────────────────────
@@ -49,27 +55,25 @@ def _print_summary():
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Lab 3: Load Pre-computed Embeddings")
-    parser.add_argument("--neo4j-uri", required=True)
-    parser.add_argument("--neo4j-username", default="neo4j")
-    parser.add_argument("--neo4j-password", required=True)
-    parser.add_argument("--volume-path", required=True)
-    args = parser.parse_args()
+    neo4j_uri = os.environ["NEO4J_URI"]
+    neo4j_username = os.getenv("NEO4J_USERNAME", "neo4j")
+    neo4j_password = os.environ["NEO4J_PASSWORD"]
+    volume_path = os.environ["DATABRICKS_VOLUME_PATH"]
 
     from neo4j import GraphDatabase
 
-    embeddings_path = f"{args.volume_path}/{EMBEDDINGS_FILE}"
+    embeddings_path = f"{volume_path}/{EMBEDDINGS_FILE}"
 
     print("=" * 60)
     print("Lab 3 Validation: Pre-computed Embeddings and Hybrid Search")
     print("=" * 60)
-    print(f"Neo4j URI:    {args.neo4j_uri}")
-    print(f"Volume path:  {args.volume_path}")
+    print(f"Neo4j URI:    {neo4j_uri}")
+    print(f"Volume path:  {volume_path}")
     print(f"Embeddings:   {embeddings_path}")
     print()
 
     driver = GraphDatabase.driver(
-        args.neo4j_uri, auth=(args.neo4j_username, args.neo4j_password)
+        neo4j_uri, auth=(neo4j_username, neo4j_password)
     )
 
     # ── Step 1: Clear existing document nodes ────────────────────────────────

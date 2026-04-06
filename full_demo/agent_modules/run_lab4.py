@@ -8,9 +8,15 @@ Usage:
     python -m cli upload run_lab4.py && python -m cli submit run_lab4.py
 """
 
-import argparse
+import os
 import sys
 import time
+
+# Parse KEY=VALUE parameters from cli.submit into environment variables.
+for _arg in sys.argv[1:]:
+    if "=" in _arg and not _arg.startswith("-"):
+        _key, _, _value = _arg.partition("=")
+        os.environ.setdefault(_key, _value)
 
 from pyspark.sql import SparkSession
 
@@ -61,28 +67,26 @@ def _print_summary():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Lab 4: Export Neo4j to Delta Lake")
-    parser.add_argument("--neo4j-uri", required=True)
-    parser.add_argument("--neo4j-username", default="neo4j")
-    parser.add_argument("--neo4j-password", required=True)
-    parser.add_argument("--volume-path", required=True)
-    args = parser.parse_args()
+    neo4j_uri = os.environ["NEO4J_URI"]
+    neo4j_username = os.getenv("NEO4J_USERNAME", "neo4j")
+    neo4j_password = os.environ["NEO4J_PASSWORD"]
+    volume_path = os.environ["DATABRICKS_VOLUME_PATH"]
 
     print("=" * 60)
     print("Lab 4 Validation: Export Neo4j to Databricks Delta Lake")
     print("=" * 60)
-    print(f"Neo4j URI:    {args.neo4j_uri}")
-    print(f"Volume path:  {args.volume_path}")
+    print(f"Neo4j URI:    {neo4j_uri}")
+    print(f"Volume path:  {volume_path}")
     print()
 
     # Parse catalog and schema from volume_path
     # Format: /Volumes/{catalog}/{schema}/{volume}
-    parts = args.volume_path.strip("/").split("/")
+    parts = volume_path.strip("/").split("/")
     if len(parts) >= 3 and parts[0] == "Volumes":
         catalog = parts[1]
         schema = "graph_data"
     else:
-        print(f"Error: Cannot parse catalog from volume_path: {args.volume_path}")
+        print(f"Error: Cannot parse catalog from volume_path: {volume_path}")
         sys.exit(1)
 
     print(f"Target:       {catalog}.{schema}")
@@ -91,9 +95,9 @@ def main():
     spark = SparkSession.builder.getOrCreate()
 
     # Configure Spark for Neo4j
-    spark.conf.set("neo4j.url", args.neo4j_uri)
-    spark.conf.set("neo4j.authentication.basic.username", args.neo4j_username)
-    spark.conf.set("neo4j.authentication.basic.password", args.neo4j_password)
+    spark.conf.set("neo4j.url", neo4j_uri)
+    spark.conf.set("neo4j.authentication.basic.username", neo4j_username)
+    spark.conf.set("neo4j.authentication.basic.password", neo4j_password)
     spark.conf.set("neo4j.database", "neo4j")
 
     # ── Step 1: Test connection ──────────────────────────────────────────────

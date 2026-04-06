@@ -7,29 +7,28 @@ Usage:
     python -m cli upload check_neo4j.py && python -m cli submit check_neo4j.py
 """
 
-import argparse
+import os
 import sys
 import time
 
+# Parse KEY=VALUE parameters from cli.submit into environment variables.
+for _arg in sys.argv[1:]:
+    if "=" in _arg and not _arg.startswith("-"):
+        _key, _, _value = _arg.partition("=")
+        os.environ.setdefault(_key, _value)
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Neo4j Connectivity Check")
-    parser.add_argument("--neo4j-uri", required=True, help="Neo4j Aura URI")
-    parser.add_argument("--neo4j-username", default="neo4j", help="Neo4j username")
-    parser.add_argument("--neo4j-password", required=True, help="Neo4j password")
-    parser.add_argument(
-        "--volume-path",
-        default="",
-        help="(unused, accepted for cli.submit compatibility)",
-    )
-    args = parser.parse_args()
+    neo4j_uri = os.environ["NEO4J_URI"]
+    neo4j_username = os.getenv("NEO4J_USERNAME", "neo4j")
+    neo4j_password = os.environ["NEO4J_PASSWORD"]
 
     from neo4j import GraphDatabase
 
     print("=" * 60)
     print("Neo4j Connectivity Check")
     print("=" * 60)
-    print(f"Neo4j URI:  {args.neo4j_uri}")
+    print(f"Neo4j URI:  {neo4j_uri}")
     print()
 
     results = []  # (name, passed, detail)
@@ -44,7 +43,7 @@ def main():
     try:
         t0 = time.time()
         driver = GraphDatabase.driver(
-            args.neo4j_uri, auth=(args.neo4j_username, args.neo4j_password)
+            neo4j_uri, auth=(neo4j_username, neo4j_password)
         )
         driver.verify_connectivity()
         elapsed = time.time() - t0

@@ -30,7 +30,6 @@
 # COMMAND ----------
 
 import time
-import yaml
 
 # Node labels to extract
 NODE_LABELS = [
@@ -68,14 +67,11 @@ print(f"Relationships to export: {len(RELATIONSHIPS)}")
 
 # COMMAND ----------
 
-# Load scope name from config.yaml
-notebook_path = dbutils.entry_point.getDbutils().notebook().getContext().notebookPath().get()
-workspace_base = "/Workspace" + notebook_path.rsplit("/", 1)[0]
-config_path = f"{workspace_base}/Includes/config.yaml"
-with open(config_path, "r") as f:
-    _config = yaml.safe_load(f)
+# MAGIC %run ./Includes/config
 
-_scope = _config["secrets"]["scope_name"]
+# COMMAND ----------
+
+_scope = CONFIG["secrets"]["scope_name"]
 
 NEO4J_URL = dbutils.secrets.get(scope=_scope, key="url")
 NEO4J_USER = dbutils.secrets.get(scope=_scope, key="username")

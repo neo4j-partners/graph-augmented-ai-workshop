@@ -12,23 +12,24 @@ Prerequisites:
     3. Neo4j credentials configured (for document type classification)
 
 Usage:
-    Run as a Databricks job via submit.sh, or directly on a cluster:
-
-    python generate_embeddings.py \
-        --volume-path /Volumes/catalog/schema/volume \
-        --output-path /Volumes/catalog/schema/volume/embeddings/document_chunks_embedded.json
-
-    Download the output JSON and commit it to Includes/data/embeddings/.
+    python -m cli upload generate_embeddings.py && python -m cli submit generate_embeddings.py
 """
 
-import argparse
 import json
+import os
 import re
+import sys
 import time
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
+
+# Parse KEY=VALUE parameters from cli.submit into environment variables.
+for _arg in sys.argv[1:]:
+    if "=" in _arg and not _arg.startswith("-"):
+        _key, _, _value = _arg.partition("=")
+        os.environ.setdefault(_key, _value)
 
 from bs4 import BeautifulSoup
 
@@ -206,28 +207,23 @@ def generate_embeddings_databricks(texts: list[str], endpoint: str = "databricks
 # =============================================================================
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate pre-computed embeddings for workshop HTML files")
-    parser.add_argument("--volume-path", required=True, help="Unity Catalog Volume path containing HTML files")
-    parser.add_argument("--output-path", default=None, help="Output path for JSON file (defaults to volume-path/embeddings/document_chunks_embedded.json)")
-    parser.add_argument("--endpoint", default="databricks-gte-large-en", help="Databricks embedding model endpoint")
-    args = parser.parse_args()
-
-    output_path = args.output_path or f"{args.volume_path}/embeddings/document_chunks_embedded.json"
+    volume_path = os.environ["DATABRICKS_VOLUME_PATH"]
+    endpoint = os.getenv("EMBEDDING_ENDPOINT", "databricks-gte-large-en")
+    output_path = os.getenv("EMBEDDING_OUTPUT_PATH") or f"{volume_path}/embeddings/document_chunks_embedded.json"
 
     print("=" * 70)
     print("EMBEDDING GENERATION - Pre-computing document embeddings")
     print("=" * 70)
-    print(f"Volume path:  {args.volume_path}")
+    print(f"Volume path:  {volume_path}")
     print(f"Output path:  {output_path}")
-    print(f"Endpoint:     {args.endpoint}")
+    print(f"Endpoint:     {endpoint}")
     print("")
 
     # Step 1: List HTML files
     print("[1/4] Listing HTML files...")
-    html_path = f"{args.volume_path}/html"
+    html_path = f"{volume_path}/html"
 
     # Volumes are regular filesystem paths on Databricks clusters
-    import os
     html_files = sorted(
         f for f in os.listdir(html_path) if f.endswith(".html")
     )
@@ -282,7 +278,7 @@ def main():
     start_time = time.time()
 
     texts = [chunk["text"] for chunk in all_chunks]
-    embeddings = generate_embeddings_databricks(texts, endpoint=args.endpoint)
+    embeddings = generate_embeddings_databricks(texts, endpoint=endpoint)
 
     for i, chunk in enumerate(all_chunks):
         chunk["embedding"] = embeddings[i]
@@ -298,7 +294,7 @@ def main():
     output = {
         "metadata": {
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "embedding_model": args.endpoint,
+            "embedding_model": endpoint,
             "embedding_dimensions": dimensions,
             "chunk_size": 4000,
             "chunk_overlap": 200,
@@ -324,7 +320,7 @@ def main():
     print("=" * 70)
     print(f"  Documents: {len(documents)}")
     print(f"  Chunks:    {len(all_chunks)}")
-    print(f"  Model:     {args.endpoint}")
+    print(f"  Model:     {endpoint}")
     print(f"  Dims:      {dimensions}")
     print("")
     print("Next steps:")

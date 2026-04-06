@@ -59,16 +59,26 @@ Create a **Dedicated** cluster with the Neo4j Spark Connector:
 
 ### 2. Import the Workshop
 
-1. Clone or download this repository
-2. In Databricks, go to **Workspace**
-3. Click **Import** and upload the `labs/` folder
+In Databricks, go to **Workspace** > right-click your user folder > **Import** > **URL** and paste:
+
+```
+<DBC_URL>
+```
+
+This imports all lab notebooks into your workspace. Data files (CSV, HTML, embeddings) are downloaded automatically from GitHub when you run the setup notebook.
+
+> **Alternative:** If you prefer to import manually, clone the repo and use the Databricks CLI:
+> ```bash
+> git clone https://github.com/neo4j-partners/graph-enrichment.git
+> databricks workspace import-dir graph-enrichment/labs /Users/<your-email>/graph-enrichment
+> ```
 
 ### 3. Run Required Setup
 
-Open and run **labs/0 - Required Setup**. It will:
+Open and run **0 - Required Setup**. It will:
 
 - Create a catalog, schema, and volume based on your username
-- Copy all data files (CSV, HTML, and pre-computed embeddings) to the volume
+- Download all data files (CSV, HTML, and pre-computed embeddings) from GitHub into your volume
 - Prompt you for Neo4j connection details and store them as Databricks secrets
 - Verify the Neo4j connection
 
@@ -99,15 +109,19 @@ graph-enrichment/
 ├── labs/
 │   ├── 0 - Required Setup.py                 # Environment setup notebook
 │   ├── 1 - Neo4j Import.py                   # Single-step Neo4j data import
+│   ├── 4 - Neo4j to Lakehouse.py             # Export graph to Delta tables
+│   ├── 5 - AI Agents.py                      # Genie + Knowledge Assistant
+│   ├── 6 - Supervisor Agent.py               # Multi-agent coordinator
 │   └── Includes/
-│       ├── config.yaml                        # Workshop configuration
+│       ├── config.py                          # Workshop configuration (imported via %run)
 │       ├── _lib/
-│       │   ├── setup_orchestrator.py          # Setup logic
+│       │   ├── setup_orchestrator.py          # Setup + GitHub data download
 │       │   └── neo4j_import.py                # Import logic
 │       └── data/
 │           ├── csv/                           # Source CSV files (7 files)
 │           ├── html/                          # Source HTML documents (14 files)
 │           └── embeddings/                    # Pre-computed embedding vectors
+├── build_dbc.py                               # Script to package labs/ as a .dbc archive
 ├── lab_7_augmentation_agent/                  # Lab 7: Graph Augmentation
 ├── full_demo/                                 # Reference implementation, validation scripts, and admin tools
 ├── docs/                                      # Reference documentation
@@ -124,11 +138,10 @@ graph-enrichment/
 | Runtime | 13.3 LTS ML or higher (Spark 3.x) |
 | Maven Library | `org.neo4j:neo4j-connector-apache-spark_2.12:5.3.1_for_spark_3` |
 
-The **ML Runtime** is recommended because it includes `pyyaml`, `neo4j`, and `beautifulsoup4`. If using a standard (non-ML) runtime, install these Python packages as cluster libraries:
+The **ML Runtime** is recommended because it includes `neo4j` and `beautifulsoup4`. If using a standard (non-ML) runtime, install these Python packages as cluster libraries:
 
 | Package | Used By |
 |---------|---------|
-| `pyyaml` | Setup notebook (reads config.yaml) |
 | `neo4j` | Import notebook (Neo4j Python driver for document graph) |
 | `beautifulsoup4` | Embedding generation (`generate_embeddings.py`, not student-facing) |
 | `databricks-langchain` | Embedding generation (`generate_embeddings.py`, not student-facing) |
@@ -172,7 +185,6 @@ Any issues discovered through the use of this project should be filed as GitHub 
 | pydantic | Data validation | MIT | https://github.com/pydantic/pydantic |
 | mlflow | ML experiment tracking | Apache 2.0 | https://github.com/mlflow/mlflow |
 | beautifulsoup4 | HTML parsing | MIT | https://www.crummy.com/software/BeautifulSoup/ |
-| pyyaml | YAML parsing | MIT | https://github.com/yaml/pyyaml |
 | sentence-transformers | Embedding models | Apache 2.0 | https://github.com/UKPLab/sentence-transformers |
 
 &copy; 2026 Databricks, Inc. All rights reserved. The source in this notebook is provided subject to the [Databricks License](https://databricks.com/db-license-source). All included or referenced third party libraries are subject to the licenses set forth above.

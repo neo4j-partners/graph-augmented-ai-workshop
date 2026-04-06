@@ -107,7 +107,7 @@ run_lab7.py         # 7. DSPy augmentation agent (requires Supervisor Agent from
 ## How It Works
 
 - `python -m cli upload` pushes Python files to the Databricks workspace via the Databricks SDK
-- `python -m cli submit` checks that the cluster is RUNNING (errors if not), injects Neo4j credentials from `.env` as command-line arguments, and submits a one-shot job via the SDK Jobs API
-- Each script uses `argparse` to receive credentials and prints PASS/FAIL for each verification check
+- `python -m cli submit` checks that the cluster is RUNNING (auto-starts if terminated), passes all non-core `.env` keys as `KEY=VALUE` parameters, and submits a one-shot job via the SDK Jobs API
+- Each script parses `KEY=VALUE` parameters from `sys.argv` into `os.environ` at startup, then reads configuration via `os.environ` / `os.getenv()`
 - Scripts exit with code 0 on success, code 1 on any failure
 - `python -m cli clean` removes the remote workspace directory and deletes job runs matching the `graph_validation:` prefix

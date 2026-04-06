@@ -11,6 +11,11 @@
 # MAGIC
 # MAGIC **Run this notebook once before starting any labs.**
 # MAGIC
+# MAGIC ### Importing the Labs
+# MAGIC
+# MAGIC Import only the **notebook files** (`.py`) and `Includes/_lib/` folder into your workspace.
+# MAGIC Data files (CSV, HTML, embeddings) are downloaded automatically from GitHub during setup.
+# MAGIC
 # MAGIC ### Prerequisites
 # MAGIC
 # MAGIC - A **Dedicated** compute cluster with the Neo4j Spark Connector installed:
@@ -41,7 +46,7 @@ dbutils.widgets.text("neo4j_password", "", "Neo4j Password")
 # MAGIC
 # MAGIC The cell below will:
 # MAGIC 1. Create a catalog and schema based on your username
-# MAGIC 2. Create a volume and copy all CSV, HTML, and embedding data files into it
+# MAGIC 2. Download all CSV, HTML, and embedding data files from GitHub into your volume
 # MAGIC 3. Store your Neo4j credentials as Databricks secrets
 # MAGIC 4. Verify the Neo4j connection
 # MAGIC
@@ -61,29 +66,24 @@ if not neo4j_url or not neo4j_password:
 
 # COMMAND ----------
 
+# MAGIC %run ./Includes/config
+
+# COMMAND ----------
+
 # MAGIC %run ./Includes/_lib/setup_orchestrator
 
 # COMMAND ----------
 
-import yaml
-
-# Load configuration
-# Workspace files are accessible at /Workspace/<notebook_path_parent>/
-notebook_path = dbutils.entry_point.getDbutils().notebook().getContext().notebookPath().get()
-workspace_base = "/Workspace" + notebook_path.rsplit("/", 1)[0]
-config_path = f"{workspace_base}/Includes/config.yaml"
-
-with open(config_path, "r") as f:
-    config = yaml.safe_load(f)
-
-catalog_config = config["catalog"]
-secrets_config = config["secrets"]
+catalog_config = CONFIG["catalog"]
+secrets_config = CONFIG["secrets"]
+github_config = CONFIG["github"]
 
 print("Configuration loaded:")
 print(f"  Catalog prefix: {catalog_config['prefix']}")
 print(f"  Schema:         {catalog_config['schema_name']}")
 print(f"  Volume:         {catalog_config['volume_name']}")
 print(f"  Secret scope:   {secrets_config['scope_name']}")
+print(f"  Data source:    github.com/{github_config['repo']} ({github_config['branch']})")
 
 # COMMAND ----------
 
@@ -99,13 +99,12 @@ catalog_info = setup_catalog_and_schema(
 
 # COMMAND ----------
 
-# Step 2: Copy data files to volume
-# workspace_base was computed above when loading config.yaml
-includes_data_path = f"{workspace_base}/Includes/data"
-
-file_counts = copy_data_files(
+# Step 2: Download data files from GitHub to volume
+file_counts = download_data_files(
     volume_path=catalog_info["volume_path"],
-    includes_data_path=includes_data_path,
+    github_repo=github_config["repo"],
+    github_branch=github_config["branch"],
+    data_path=github_config["data_path"],
 )
 
 # COMMAND ----------

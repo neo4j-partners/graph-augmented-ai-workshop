@@ -8,9 +8,15 @@ Usage:
     python -m cli upload run_lab2.py && python -m cli submit run_lab2.py
 """
 
-import argparse
+import os
 import sys
 import time
+
+# Parse KEY=VALUE parameters from cli.submit into environment variables.
+for _arg in sys.argv[1:]:
+    if "=" in _arg and not _arg.startswith("-"):
+        _key, _, _value = _arg.partition("=")
+        os.environ.setdefault(_key, _value)
 
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as F
@@ -89,33 +95,31 @@ def write_relationship(spark, df, rel_type, src_label, src_key, tgt_label, tgt_k
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Lab 2: Import Financial Data to Neo4j")
-    parser.add_argument("--neo4j-uri", required=True)
-    parser.add_argument("--neo4j-username", default="neo4j")
-    parser.add_argument("--neo4j-password", required=True)
-    parser.add_argument("--volume-path", required=True)
-    args = parser.parse_args()
+    neo4j_uri = os.environ["NEO4J_URI"]
+    neo4j_username = os.getenv("NEO4J_USERNAME", "neo4j")
+    neo4j_password = os.environ["NEO4J_PASSWORD"]
+    volume_path = os.environ["DATABRICKS_VOLUME_PATH"]
 
     print("=" * 60)
     print("Lab 2 Validation: Import Financial Data to Neo4j")
     print("=" * 60)
-    print(f"Neo4j URI:    {args.neo4j_uri}")
-    print(f"Volume path:  {args.volume_path}")
+    print(f"Neo4j URI:    {neo4j_uri}")
+    print(f"Volume path:  {volume_path}")
     print()
 
     spark = SparkSession.builder.getOrCreate()
 
     # Configure Spark for Neo4j
-    spark.conf.set("neo4j.url", args.neo4j_uri)
-    spark.conf.set("neo4j.authentication.basic.username", args.neo4j_username)
-    spark.conf.set("neo4j.authentication.basic.password", args.neo4j_password)
+    spark.conf.set("neo4j.url", neo4j_uri)
+    spark.conf.set("neo4j.authentication.basic.username", neo4j_username)
+    spark.conf.set("neo4j.authentication.basic.password", neo4j_password)
     spark.conf.set("neo4j.database", "neo4j")
 
     # ── Step 1: Clear database ───────────────────────────────────────────────
     print("[Step 1] Clearing Neo4j database...")
     try:
         from neo4j import GraphDatabase
-        driver = GraphDatabase.driver(args.neo4j_uri, auth=(args.neo4j_username, args.neo4j_password))
+        driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_username, neo4j_password))
         with driver.session(database="neo4j") as session:
             summary = session.run("MATCH (n) DETACH DELETE n").consume()
             nodes_del = summary.counters.nodes_deleted
@@ -129,7 +133,7 @@ def main():
 
     # ── Step 2: Load CSV files ───────────────────────────────────────────────
     print("\n[Step 2] Loading CSV files...")
-    csv_path = f"{args.volume_path}/csv"
+    csv_path = f"{volume_path}/csv"
     try:
         data = {}
         files = [
@@ -213,7 +217,7 @@ def main():
     # ── Step 4: Create constraints ───────────────────────────────────────────
     print("\n[Step 4] Creating constraints...")
     try:
-        driver = GraphDatabase.driver(args.neo4j_uri, auth=(args.neo4j_username, args.neo4j_password))
+        driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_username, neo4j_password))
         constraints = [
             ("customer_id_unique", "Customer", "customer_id"),
             ("bank_id_unique", "Bank", "bank_id"),
@@ -299,7 +303,7 @@ def main():
     # ── Step 7: Validate counts ──────────────────────────────────────────────
     print("\n[Step 7] Validating counts...")
     try:
-        driver = GraphDatabase.driver(args.neo4j_uri, auth=(args.neo4j_username, args.neo4j_password))
+        driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_username, neo4j_password))
 
         # Node counts
         recs, _, _ = driver.execute_query(

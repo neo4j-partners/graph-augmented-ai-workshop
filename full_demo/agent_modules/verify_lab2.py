@@ -7,9 +7,15 @@ Usage:
     python -m cli upload verify_lab2.py && python -m cli submit verify_lab2.py
 """
 
-import argparse
+import os
 import sys
 import time
+
+# Parse KEY=VALUE parameters from cli.submit into environment variables.
+for _arg in sys.argv[1:]:
+    if "=" in _arg and not _arg.startswith("-"):
+        _key, _, _value = _arg.partition("=")
+        os.environ.setdefault(_key, _value)
 
 
 EXPECTED_NODES = {
@@ -52,26 +58,23 @@ def _print_summary():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Lab 2: Read-Only Verification")
-    parser.add_argument("--neo4j-uri", required=True)
-    parser.add_argument("--neo4j-username", default="neo4j")
-    parser.add_argument("--neo4j-password", required=True)
-    parser.add_argument("--volume-path", default="", help="(unused)")
-    args = parser.parse_args()
+    neo4j_uri = os.environ["NEO4J_URI"]
+    neo4j_username = os.getenv("NEO4J_USERNAME", "neo4j")
+    neo4j_password = os.environ["NEO4J_PASSWORD"]
 
     from neo4j import GraphDatabase
 
     print("=" * 60)
     print("Lab 2 Verification: Read-Only Data Check")
     print("=" * 60)
-    print(f"Neo4j URI: {args.neo4j_uri}")
+    print(f"Neo4j URI: {neo4j_uri}")
     print()
 
     # ── Connect ──────────────────────────────────────────────────────────────
     try:
         t0 = time.time()
         driver = GraphDatabase.driver(
-            args.neo4j_uri, auth=(args.neo4j_username, args.neo4j_password)
+            neo4j_uri, auth=(neo4j_username, neo4j_password)
         )
         driver.verify_connectivity()
         record("Neo4j connectivity", True, f"connected in {time.time() - t0:.2f}s")

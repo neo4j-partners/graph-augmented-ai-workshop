@@ -173,3 +173,48 @@ class AugmentationResponse(BaseModel):
         self.high_confidence_count = sum(
             1 for s in all_items if s.confidence == ConfidenceLevel.HIGH
         )
+
+
+# ---------------------------------------------------------------------------
+# Instance-level enrichment proposals
+# ---------------------------------------------------------------------------
+
+
+class NodeReference(BaseModel):
+    """A reference to a specific node in the graph."""
+
+    label: str = Field(..., description="Node label (e.g., 'Customer')")
+    key_property: str = Field(..., description="Property name used as identifier (e.g., 'customerId')")
+    key_value: str = Field(..., description="Property value (e.g., 'C0001')")
+
+
+class EnrichmentProposal(BaseModel):
+    """A concrete, instance-level proposal to add a relationship between two specific nodes."""
+
+    source_node: NodeReference
+    relationship_type: str = Field(..., description="Relationship type (e.g., 'INTERESTED_IN')")
+    target_node: NodeReference
+    confidence: ConfidenceLevel = Field(default=ConfidenceLevel.MEDIUM)
+    source_document: str = Field(..., description="Document that contains the evidence")
+    extracted_phrase: str = Field(..., description="Quoted phrase supporting the proposal")
+
+
+class EnrichmentResult(BaseModel):
+    """Result of resolving schema-level suggestions into instance-level proposals."""
+
+    proposals: list[EnrichmentProposal] = Field(default_factory=list)
+    approved: list[EnrichmentProposal] = Field(default_factory=list)
+    flagged: list[EnrichmentProposal] = Field(default_factory=list)
+    rejected: list[EnrichmentProposal] = Field(default_factory=list)
+
+    @property
+    def approved_count(self) -> int:
+        return len(self.approved)
+
+    @property
+    def flagged_count(self) -> int:
+        return len(self.flagged)
+
+    @property
+    def rejected_count(self) -> int:
+        return len(self.rejected)

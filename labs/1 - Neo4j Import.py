@@ -73,6 +73,10 @@
 
 # COMMAND ----------
 
+# MAGIC %run ./Includes/config
+
+# COMMAND ----------
+
 # MAGIC %run ./Includes/_lib/neo4j_import
 
 # COMMAND ----------

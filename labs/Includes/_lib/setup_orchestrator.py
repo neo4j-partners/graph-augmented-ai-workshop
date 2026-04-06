@@ -3,22 +3,17 @@ Setup orchestrator for the Graph Augmented AI Workshop.
 
 This module handles all environment preparation:
 - Catalog, schema, and volume creation
-- Data file copying from Includes/data/ to the volume
+- Data file download from GitHub to the volume
 - Neo4j secret scope creation and validation
 - Neo4j connectivity verification
 
 Called by the "0 - Required Setup" notebook via %run.
 """
 
+import io
 import os
-import shutil
-import yaml
-
-
-def load_config(config_path: str) -> dict:
-    """Load workshop configuration from YAML."""
-    with open(config_path, "r") as f:
-        return yaml.safe_load(f)
+import tarfile
+import urllib.request
 
 
 def get_username() -> str:
@@ -84,25 +79,38 @@ def setup_catalog_and_schema(catalog_name: str, schema_name: str, volume_name: s
     }
 
 
-def copy_data_files(volume_path: str, includes_data_path: str) -> dict:
-    """Copy CSV, HTML, and embedding files from Includes/data/ to the volume.
+def download_data_files(volume_path: str, github_repo: str, github_branch: str = "main", data_path: str = "labs/Includes/data") -> dict:
+    """Download data files from GitHub and write them to the volume.
 
-    Both workspace files (/Workspace/...) and Unity Catalog volumes (/Volumes/...)
-    are accessible as regular filesystem paths in Databricks. This function uses
-    standard Python file I/O for the copy.
+    Downloads the repository tarball from GitHub and extracts only the data
+    files (CSV, HTML, embeddings) directly into the target volume. This
+    eliminates the need for participants to upload data files to the workspace.
 
     Args:
         volume_path: Target Unity Catalog volume path (e.g. /Volumes/catalog/schema/vol).
-        includes_data_path: Workspace path to the Includes/data/ directory.
+        github_repo: GitHub repo in "owner/repo" format.
+        github_branch: Branch to download from.
+        data_path: Path within the repo to the data directory.
 
     Returns:
-        Dict with counts of files copied per category.
+        Dict with counts of files downloaded per category.
     """
     print("\n" + "=" * 70)
-    print("STEP 2: Copying Data Files to Volume")
+    print("STEP 2: Downloading Data Files from GitHub")
     print("=" * 70)
 
+    url = f"https://github.com/{github_repo}/archive/refs/heads/{github_branch}.tar.gz"
+    print(f"\n  Downloading from: {github_repo} ({github_branch} branch)")
+
+    response = urllib.request.urlopen(url)
+    tarball = io.BytesIO(response.read())
+    print("  [OK] Repository archive downloaded")
+
     counts = {"csv": 0, "html": 0, "embeddings": 0}
+
+    # Tarball root directory is {repo_name}-{branch}/
+    repo_name = github_repo.split("/")[-1]
+    data_prefix = f"{repo_name}-{github_branch}/{data_path}/"
 
     subdirs = {
         "csv": ".csv",
@@ -110,27 +118,32 @@ def copy_data_files(volume_path: str, includes_data_path: str) -> dict:
         "embeddings": ".json",
     }
 
-    for subdir, extension in subdirs.items():
-        source_dir = os.path.join(includes_data_path, subdir)
-        target_dir = os.path.join(volume_path, subdir)
+    with tarfile.open(fileobj=tarball, mode="r:gz") as tar:
+        for member in tar.getmembers():
+            if not member.name.startswith(data_prefix) or member.isdir():
+                continue
 
-        # Create target subdirectory
-        os.makedirs(target_dir, exist_ok=True)
+            relative = member.name[len(data_prefix):]
+            parts = relative.split("/")
+            if len(parts) != 2:
+                continue
 
-        print(f"\n  Copying {subdir} files...")
-        if not os.path.isdir(source_dir):
-            print(f"    [WARN] Source directory not found: {source_dir}")
-            continue
+            subdir, filename = parts
+            if subdir not in subdirs or not filename.endswith(subdirs[subdir]):
+                continue
 
-        for filename in sorted(os.listdir(source_dir)):
-            if filename.endswith(extension):
-                src = os.path.join(source_dir, filename)
-                dst = os.path.join(target_dir, filename)
-                shutil.copy2(src, dst)
+            target_dir = os.path.join(volume_path, subdir)
+            os.makedirs(target_dir, exist_ok=True)
+
+            f = tar.extractfile(member)
+            if f:
+                target_path = os.path.join(target_dir, filename)
+                with open(target_path, "wb") as out:
+                    out.write(f.read())
                 counts[subdir] += 1
-                print(f"    [OK] {filename}")
+                print(f"    [OK] {subdir}/{filename}")
 
-    print(f"\n  Summary: {counts['csv']} CSV, {counts['html']} HTML, {counts['embeddings']} embedding files copied")
+    print(f"\n  Summary: {counts['csv']} CSV, {counts['html']} HTML, {counts['embeddings']} embedding files downloaded")
     return counts
 
 

@@ -28,13 +28,19 @@ Usage:
     python -m cli upload run_lab7.py && python -m cli submit run_lab7.py
 """
 
-import argparse
+import os
 import sys
 import time
 from dataclasses import dataclass
 from enum import Enum
 from types import SimpleNamespace
 from typing import Any
+
+# Parse KEY=VALUE parameters from cli.submit into environment variables.
+for _arg in sys.argv[1:]:
+    if "=" in _arg and not _arg.startswith("-"):
+        _key, _, _value = _arg.partition("=")
+        os.environ.setdefault(_key, _value)
 
 import dspy
 from databricks_openai import DatabricksOpenAI
@@ -439,25 +445,12 @@ def _print_summary(results):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Lab 7: Graph Augmentation Agent (DSPy)"
-    )
-    parser.add_argument(
-        "--supervisor-endpoint",
-        default="mas-3ae5a347-endpoint",
-        help="Supervisor Agent endpoint name from Lab 6",
-    )
-    # Accept standard cli.submit params (ignored by this script)
-    parser.add_argument("--neo4j-uri", default="")
-    parser.add_argument("--neo4j-username", default="")
-    parser.add_argument("--neo4j-password", default="")
-    parser.add_argument("--volume-path", default="")
-    args = parser.parse_args()
+    supervisor_endpoint = os.getenv("SUPERVISOR_AGENT_ENDPOINT", "mas-3ae5a347-endpoint")
 
     print("=" * 60)
     print("Lab 7: Graph Augmentation Agent (DSPy)")
     print("=" * 60)
-    print(f"  Supervisor Agent Endpoint: {args.supervisor_endpoint}")
+    print(f"  Supervisor Agent Endpoint: {supervisor_endpoint}")
     print()
 
     results = []
@@ -486,7 +479,7 @@ def main():
     print("\nStep 2: Configure DSPy")
     try:
         lm = DatabricksResponsesLM(
-            model=args.supervisor_endpoint,
+            model=supervisor_endpoint,
             temperature=0.1,
             max_tokens=4000,
         )
@@ -494,7 +487,7 @@ def main():
         dspy.configure(lm=lm, track_usage=True)
         record(
             "dspy_config", True,
-            f"BaseLM(model_type=responses), endpoint={args.supervisor_endpoint}",
+            f"BaseLM(model_type=responses), endpoint={supervisor_endpoint}",
         )
     except Exception as e:
         record("dspy_config", False, str(e))
@@ -508,7 +501,7 @@ def main():
     gap_analysis = ""
     try:
         t0 = time.time()
-        gap_analysis = query_supervisor_agent(args.supervisor_endpoint)
+        gap_analysis = query_supervisor_agent(supervisor_endpoint)
         elapsed = time.time() - t0
         record(
             "supervisor_gap_analysis",

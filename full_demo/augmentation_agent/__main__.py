@@ -2,69 +2,55 @@
 
 Run with::
 
-    cd solutions
-    python -m augmentation_agent --supervisor-endpoint <endpoint-name>
+    cd full_demo
+    python -m augmentation_agent
 
-The script orchestrates five steps:
+Configuration is loaded from ``.env`` in the project root (full_demo/).
+All settings can be overridden via environment variables.
+
+The script orchestrates eight steps:
 
 1. Verify Databricks authentication.
 2. Configure DSPy with the Supervisor Agent endpoint (BaseLM, model_type=responses).
 3. Query the Supervisor Agent for gap analysis.
 4. Run four DSPy analyses concurrently via ``dspy.Parallel``.
 5. Validate and display the structured results.
+6. Resolve schema-level suggestions into instance-level proposals.
+7. Filter proposals by confidence level (HIGH/MEDIUM/LOW).
+8. Write approved proposals back to Neo4j.
 """
 
 from __future__ import annotations
 
-import argparse
 import sys
 import time
+from pathlib import Path
 
-from pydantic import BaseModel
-
-from augmentation_agent.analyzers import (
-    AnalysisResult,
-    GraphAugmentationAnalyzer,
-    InvestmentThemesAnalyzer,
-    NewEntitiesAnalyzer,
-    MissingAttributesAnalyzer,
-    ImpliedRelationshipsAnalyzer,
-)
-from augmentation_agent.lm import configure_dspy
-from augmentation_agent.supervisor_client import fetch_gap_analysis
-from augmentation_agent.reporting import (
-    ValidationHarness,
-    print_analysis_result,
-    print_response_summary,
-)
-from augmentation_agent.schemas import (
-    ConfidenceLevel,
-    ImpliedRelationshipsAnalysis,
-    InvestmentThemesAnalysis,
-    MissingAttributesAnalysis,
-    NewEntitiesAnalysis,
-)
-
-DEFAULT_ENDPOINT = "mas-3ae5a347-endpoint"
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 
-def _parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(
-        description="Lab 7: Graph Augmentation Agent (DSPy)",
-    )
-    p.add_argument(
-        "--supervisor-endpoint",
-        default=DEFAULT_ENDPOINT,
-        help="Supervisor Agent endpoint name from Lab 6",
-    )
-    p.add_argument("--temperature", type=float, default=0.1)
-    p.add_argument("--max-tokens", type=int, default=4000)
-    # Accepted from cli.submit but unused by this script.
-    p.add_argument("--neo4j-uri", default="")
-    p.add_argument("--neo4j-username", default="")
-    p.add_argument("--neo4j-password", default="")
-    p.add_argument("--volume-path", default="")
-    return p.parse_args()
+# ---------------------------------------------------------------------------
+# Configuration (loaded from .env + environment variables)
+# ---------------------------------------------------------------------------
+
+_ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
+
+
+class Settings(BaseSettings):
+    """Agent configuration loaded from .env and environment variables."""
+
+    model_config = {"env_file": str(_ENV_FILE), "env_file_encoding": "utf-8", "extra": "ignore"}
+
+    supervisor_agent_endpoint: str = Field(default="mas-3ae5a347-endpoint")
+    temperature: float = Field(default=0.1)
+    max_tokens: int = Field(default=4000)
+    neo4j_uri: str = Field(default="")
+    neo4j_username: str = Field(default="neo4j")
+    neo4j_password: str = Field(default="")
+    databricks_volume_path: str = Field(default="")
+    dry_run: bool = Field(default=False)
+    analysis_only: bool = Field(default=False)
 
 
 # ---------------------------------------------------------------------------
@@ -72,7 +58,14 @@ def _parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 
 
-def _describe(ar: AnalysisResult) -> str:
+def _describe(ar) -> str:
+    from augmentation_agent.schemas import (
+        ImpliedRelationshipsAnalysis,
+        InvestmentThemesAnalysis,
+        MissingAttributesAnalysis,
+        NewEntitiesAnalysis,
+    )
+
     d = ar.data
     if isinstance(d, InvestmentThemesAnalysis):
         return f"{len(d.themes)} themes"
@@ -85,37 +78,36 @@ def _describe(ar: AnalysisResult) -> str:
     return "ok"
 
 
-def _count_suggestions(results: list[AnalysisResult]) -> tuple[int, int]:
-    total = high = 0
-    for r in results:
-        d = r.data
-        items: list = []
-        if isinstance(d, NewEntitiesAnalysis):
-            items = d.suggested_nodes
-        elif isinstance(d, MissingAttributesAnalysis):
-            items = d.suggested_attributes
-        elif isinstance(d, ImpliedRelationshipsAnalysis):
-            items = d.suggested_relationships
-        total += len(items)
-        high += sum(1 for i in items if i.confidence == ConfidenceLevel.HIGH)
-    return total, high
-
-
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 
 def main() -> None:
-    args = _parse_args()
+    from pydantic import BaseModel
+
+    from augmentation_agent.analyzers import GraphAugmentationAnalyzer
+    from augmentation_agent.filter import filter_proposals
+    from augmentation_agent.lm import configure_dspy
+    from augmentation_agent.resolver import resolve_proposals
+    from augmentation_agent.reporting import (
+        ValidationHarness,
+        print_response_summary,
+    )
+    from augmentation_agent.writeback import write_proposals
+
+    settings = Settings()
     harness = ValidationHarness()
 
     print("=" * 60)
     print("Lab 7: Graph Augmentation Agent (DSPy)")
     print("=" * 60)
-    print(f"  Endpoint:    {args.supervisor_endpoint}")
-    print(f"  Temperature: {args.temperature}")
-    print(f"  Max tokens:  {args.max_tokens}")
+    print(f"  Endpoint:    {settings.supervisor_agent_endpoint}")
+    print(f"  Temperature: {settings.temperature}")
+    print(f"  Max tokens:  {settings.max_tokens}")
+    print(f"  Neo4j URI:   {settings.neo4j_uri or '(not set)'}")
+    print(f"  Dry run:     {settings.dry_run}")
+    print(f"  Analysis only: {settings.analysis_only}")
     print()
 
     # ── Step 1: Authentication ────────────────────────────────────────
@@ -136,9 +128,9 @@ def main() -> None:
     print("\nStep 2: Configure DSPy")
     try:
         configure_dspy(
-            args.supervisor_endpoint,
-            temperature=args.temperature,
-            max_tokens=args.max_tokens,
+            settings.supervisor_agent_endpoint,
+            temperature=settings.temperature,
+            max_tokens=settings.max_tokens,
         )
         harness.record("dspy_config", True, "BaseLM  model_type=responses")
     except Exception as e:
@@ -150,7 +142,9 @@ def main() -> None:
 
     print("\nStep 3: Query Supervisor Agent for Gap Analysis")
     try:
-        gap_analysis = fetch_gap_analysis(args.supervisor_endpoint)
+        from augmentation_agent.supervisor_client import fetch_gap_analysis
+
+        gap_analysis = fetch_gap_analysis(settings.supervisor_agent_endpoint)
         harness.record(
             "supervisor_gap_analysis",
             len(gap_analysis) > 100,
@@ -171,7 +165,6 @@ def main() -> None:
         response = analyzer(gap_analysis)
         elapsed = time.time() - t0
 
-        # Record per-analysis pass/fail from the consolidated response
         for name, field in [
             ("investment_themes", response.analysis.investment_themes),
             ("new_entities", response.analysis.new_entities),
@@ -211,6 +204,76 @@ def main() -> None:
         ]
     )
     harness.record("structured_output", has_pydantic, "Pydantic models returned")
+
+    # ── Stop here if analysis-only mode ──────────────────────────────
+
+    if settings.analysis_only:
+        harness.print_summary()
+        sys.exit(0 if harness.all_passed else 1)
+
+    # ── Step 6: Resolve into instance-level proposals ────────────────
+
+    print("\nStep 6: Resolve Instance-Level Proposals")
+    try:
+        proposals = resolve_proposals(response, settings.supervisor_agent_endpoint)
+        harness.record(
+            "resolve_proposals",
+            isinstance(proposals, list),
+            f"{len(proposals)} proposals",
+        )
+    except Exception as e:
+        harness.record("resolve_proposals", False, str(e))
+        harness.print_summary()
+        sys.exit(1)
+
+    # ── Step 7: Filter by confidence ─────────────────────────────────
+
+    print("\nStep 7: Filter Proposals by Confidence")
+    enrichment_result = filter_proposals(proposals)
+    writable = enrichment_result.approved + enrichment_result.flagged
+    harness.record(
+        "confidence_filter",
+        True,
+        f"{enrichment_result.approved_count} approved, "
+        f"{enrichment_result.flagged_count} flagged, "
+        f"{enrichment_result.rejected_count} rejected",
+    )
+
+    # ── Step 8: Write back to Neo4j ──────────────────────────────────
+
+    print("\nStep 8: Write Enrichments to Neo4j")
+    if not settings.neo4j_uri:
+        harness.record(
+            "neo4j_writeback",
+            False,
+            "skipped: NEO4J_URI not set in .env",
+        )
+    elif not writable:
+        harness.record("neo4j_writeback", True, "no proposals to write")
+    else:
+        try:
+            report = write_proposals(
+                writable,
+                settings.neo4j_uri,
+                settings.neo4j_username,
+                settings.neo4j_password,
+                dry_run=settings.dry_run,
+            )
+            if settings.dry_run:
+                harness.record(
+                    "neo4j_writeback",
+                    True,
+                    f"dry run: {len(writable)} proposals previewed",
+                )
+            else:
+                harness.record(
+                    "neo4j_writeback",
+                    True,
+                    f"{report.created} created, {report.updated} updated, "
+                    f"{len(report.skipped)} skipped",
+                )
+        except Exception as e:
+            harness.record("neo4j_writeback", False, str(e))
 
     # ── Summary ───────────────────────────────────────────────────────
 
