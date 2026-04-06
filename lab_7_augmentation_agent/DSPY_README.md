@@ -290,8 +290,9 @@ from databricks.sdk import WorkspaceClient
 
 # On Databricks: auto-authenticates via runtime
 # Locally: uses DATABRICKS_HOST and DATABRICKS_TOKEN from .env
-client = WorkspaceClient()
-openai_client = client.serving_endpoints.get_open_ai_client()
+from databricks_openai import DatabricksOpenAI
+
+openai_client = DatabricksOpenAI()
 ```
 
 **Do NOT** use `dbutils.secrets` for Databricks credentials—they're not needed.

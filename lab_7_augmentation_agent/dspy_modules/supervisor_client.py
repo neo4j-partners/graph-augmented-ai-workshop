@@ -203,10 +203,9 @@ class SupervisorAgentClient:
             return self._client
 
         try:
-            from databricks.sdk import WorkspaceClient
+            from databricks_openai import DatabricksOpenAI
 
-            workspace_client = WorkspaceClient()
-            self._client = workspace_client.serving_endpoints.get_open_ai_client()
+            self._client = DatabricksOpenAI()
             return self._client
         except Exception as e:
             raise RuntimeError(f"Failed to create Databricks client: {e}")

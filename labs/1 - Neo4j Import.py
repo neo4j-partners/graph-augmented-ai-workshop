@@ -63,7 +63,7 @@
 # MAGIC 3. Generate a vector embedding for each chunk via the Databricks embedding endpoint
 # MAGIC 4. Save everything to a JSON file that ships with the workshop
 # MAGIC
-# MAGIC The generation script lives in `workshop_admin/agent_modules/generate_embeddings.py` if you want to see
+# MAGIC The generation script lives in `full_demo/agent_modules/generate_embeddings.py` if you want to see
 # MAGIC exactly how it works or regenerate the embeddings with a different model.
 
 # COMMAND ----------

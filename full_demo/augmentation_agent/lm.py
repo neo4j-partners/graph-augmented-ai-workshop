@@ -51,10 +51,9 @@ class DatabricksResponsesLM(dspy.BaseLM):
         if self._client is not None:
             return self._client
 
-        from databricks.sdk import WorkspaceClient
+        from databricks_openai import DatabricksOpenAI
 
-        wc = WorkspaceClient()
-        self._client = wc.serving_endpoints.get_open_ai_client()
+        self._client = DatabricksOpenAI()
         return self._client
 
     # -- BaseLM contract ---------------------------------------------------

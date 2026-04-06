@@ -37,6 +37,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import dspy
+from databricks_openai import DatabricksOpenAI
 from pydantic import BaseModel, Field
 
 
@@ -156,10 +157,7 @@ class DatabricksResponsesLM(dspy.BaseLM):
         """Lazily create the Databricks OpenAI-compatible client."""
         if self._client is not None:
             return self._client
-        from databricks.sdk import WorkspaceClient
-
-        wc = WorkspaceClient()
-        self._client = wc.serving_endpoints.get_open_ai_client()
+        self._client = DatabricksOpenAI()
         return self._client
 
     def forward(self, prompt=None, messages=None, **kwargs):
@@ -410,10 +408,7 @@ def query_supervisor_agent(endpoint_name: str) -> str:
     Uses the Databricks SDK directly (not DSPy) since this is a
     one-shot data-fetching call, not a structured-output task.
     """
-    from databricks.sdk import WorkspaceClient
-
-    wc = WorkspaceClient()
-    client = wc.serving_endpoints.get_open_ai_client()
+    client = DatabricksOpenAI()
     response = client.responses.create(
         model=endpoint_name,
         input=[{"role": "user", "content": COMPREHENSIVE_GAP_QUERY}],

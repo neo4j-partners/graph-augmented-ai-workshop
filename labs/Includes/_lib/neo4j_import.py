@@ -11,6 +11,7 @@ Called by the "1 - Neo4j Import" notebook.
 import json
 import time
 
+import yaml
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.types import DoubleType, IntegerType
@@ -20,14 +21,26 @@ from pyspark.sql.types import DoubleType, IntegerType
 # CONFIGURATION
 # =============================================================================
 
+def _load_scope_name() -> str:
+    """Read the secret scope name from Includes/config.yaml."""
+    notebook_path = (
+        dbutils.entry_point.getDbutils()  # noqa: F821
+        .notebook().getContext().notebookPath().get()
+    )
+    workspace_base = "/Workspace" + notebook_path.rsplit("/", 1)[0]
+    config_path = f"{workspace_base}/Includes/config.yaml"
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+    return config["secrets"]["scope_name"]
+
+
 def load_neo4j_config():
     """Load Neo4j configuration from Databricks Secrets."""
     print("=" * 70)
     print("CONFIGURATION")
     print("=" * 70)
 
-    # Scope name must match secrets.scope_name in Includes/config.yaml
-    scope = "neo4j-creds"
+    scope = _load_scope_name()
     config = {
         "neo4j_url": dbutils.secrets.get(scope=scope, key="url"),  # noqa: F821
         "neo4j_user": dbutils.secrets.get(scope=scope, key="username"),  # noqa: F821

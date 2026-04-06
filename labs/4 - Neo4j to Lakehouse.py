@@ -30,6 +30,7 @@
 # COMMAND ----------
 
 import time
+import yaml
 
 # Node labels to extract
 NODE_LABELS = [
@@ -67,25 +68,32 @@ print(f"Relationships to export: {len(RELATIONSHIPS)}")
 
 # COMMAND ----------
 
-CATALOG = "neo4j_workshop"
-SCHEMA = "raw_data"
+# Load scope name from config.yaml
+notebook_path = dbutils.entry_point.getDbutils().notebook().getContext().notebookPath().get()
+workspace_base = "/Workspace" + notebook_path.rsplit("/", 1)[0]
+config_path = f"{workspace_base}/Includes/config.yaml"
+with open(config_path, "r") as f:
+    _config = yaml.safe_load(f)
 
-NEO4J_URL = dbutils.secrets.get(scope="neo4j-creds", key="url")
-NEO4J_USER = dbutils.secrets.get(scope="neo4j-creds", key="username")
-NEO4J_PASS = dbutils.secrets.get(scope="neo4j-creds", key="password")
+_scope = _config["secrets"]["scope_name"]
+
+NEO4J_URL = dbutils.secrets.get(scope=_scope, key="url")
+NEO4J_USER = dbutils.secrets.get(scope=_scope, key="username")
+NEO4J_PASS = dbutils.secrets.get(scope=_scope, key="password")
 NEO4J_DATABASE = "neo4j"
 
 # Extract catalog/schema from volume_path: /Volumes/{catalog}/{schema}/{volume}
-try:
-    volume_path = dbutils.secrets.get(scope="neo4j-creds", key="volume_path")
-    parts = volume_path.strip("/").split("/")
-    if len(parts) >= 3 and parts[0] == "Volumes":
-        CATALOG = parts[1]
-        SCHEMA = parts[2]
-        print(f"[OK] Catalog: {CATALOG}")
-        print(f"[OK] Schema: {SCHEMA}")
-except Exception:
-    print(f"[INFO] Using defaults: {CATALOG}.{SCHEMA}")
+volume_path = dbutils.secrets.get(scope=_scope, key="volume_path")
+parts = volume_path.strip("/").split("/")
+if len(parts) < 3 or parts[0] != "Volumes":
+    raise ValueError(
+        f"Cannot parse catalog/schema from volume_path: {volume_path}\n"
+        f"Expected format: /Volumes/{{catalog}}/{{schema}}/{{volume}}"
+    )
+CATALOG = parts[1]
+SCHEMA = parts[2]
+print(f"[OK] Catalog: {CATALOG}")
+print(f"[OK] Schema: {SCHEMA}")
 
 # Configure Spark for Neo4j
 spark.conf.set("neo4j.url", NEO4J_URL)

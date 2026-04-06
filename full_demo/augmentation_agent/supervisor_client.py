@@ -52,10 +52,9 @@ Provide specific evidence and quotes for each finding.
 
 def _get_responses_client(endpoint_name: str | None = None) -> tuple[Any, str]:
     """Return ``(openai_client, endpoint_name)`` using the Databricks SDK."""
-    from databricks.sdk import WorkspaceClient
+    from databricks_openai import DatabricksOpenAI
 
-    wc = WorkspaceClient()
-    client = wc.serving_endpoints.get_open_ai_client()
+    client = DatabricksOpenAI()
     return client, endpoint_name or ""
 
 
