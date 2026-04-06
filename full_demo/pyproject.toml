@@ -18,8 +18,6 @@ dev = [
     "databricks-job-runner",
 ]
 
-[tool.uv.sources]
-databricks-job-runner = { path = "/Users/ryanknight/projects/databricks/databricks-job-runner", editable = true }
 
 [tool.setuptools.packages.find]
 include = ["augmentation_agent*"]

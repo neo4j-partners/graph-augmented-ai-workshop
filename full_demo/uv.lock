@@ -198,7 +198,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "databricks-job-runner", editable = "../../databricks-job-runner" }]
+dev = [{ name = "databricks-job-runner" }]
 
 [[package]]
 name = "cachetools"
@@ -445,17 +445,15 @@ wheels = [
 
 [[package]]
 name = "databricks-job-runner"
-version = "0.2.0"
-source = { editable = "../../databricks-job-runner" }
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "databricks-sdk" },
     { name = "pydantic" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "databricks-sdk" },
-    { name = "pydantic", specifier = ">=2" },
+sdist = { url = "https://files.pythonhosted.org/packages/f8/ff/8c525a4ffec8805ab57483fdf139ee4362c1d3f355eaff0d14d527748e84/databricks_job_runner-0.3.0.tar.gz", hash = "sha256:e4e5f1ec54f17cc373e623551e2dc67e9f80cc44344aaac51f418fe607cf85dd", size = 17853, upload-time = "2026-04-06T13:36:45.637Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/35/0b/5530f7a52402f9c1bf99f865a0be1f432a967feed4561999a72e99d6d2fd/databricks_job_runner-0.3.0-py3-none-any.whl", hash = "sha256:84d803b4fea80b40bc50a91dc229d26d590972cae0b45f8ed19ac4cc1de04e1f", size = 23620, upload-time = "2026-04-06T13:36:44.273Z" },
 ]
 
 [[package]]
