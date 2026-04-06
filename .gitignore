@@ -130,3 +130,6 @@ docs/export/
 results.json
 mlruns/
 mlflow.db
+
+# DBC build artifacts
+*.dbc

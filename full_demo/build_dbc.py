@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# ///
 """
 Build a .dbc archive from the labs/ directory.
 
@@ -6,17 +9,16 @@ A .dbc file is a ZIP archive containing Databricks notebooks. Each notebook
 is stored as a JSON entry with its source code, language, and relative path.
 
 Usage:
-    python build_dbc.py                    # outputs labs.dbc
-    python build_dbc.py -o my_workshop.dbc # custom output name
+    uv run build_dbc.py                    # outputs labs.dbc
+    uv run build_dbc.py -o my_workshop.dbc # custom output name
 """
 
 import argparse
-import base64
 import json
 import os
 import zipfile
 
-LABS_DIR = os.path.join(os.path.dirname(__file__), "labs")
+LABS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "labs")
 
 # Map file extensions to Databricks language identifiers
 LANG_MAP = {
@@ -54,7 +56,6 @@ def build_dbc(labs_dir: str, output_path: str):
 
     with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for nb in notebooks:
-            # Each entry is a JSON file at the notebook's path
             entry_path = nb["path"]
             entry = json.dumps({
                 "version": "NotebookV1",

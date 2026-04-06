@@ -1,5 +1,4 @@
 # Databricks notebook source
-
 # Workshop Configuration
 # This notebook is imported via %run and makes CONFIG available to all lab notebooks.
 
