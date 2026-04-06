@@ -1449,7 +1449,7 @@ wheels = [
 ]
 
 [[package]]
-name = "graph-augmented-ai-workshop"
+name = "graph-enrichment"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

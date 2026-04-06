@@ -3,12 +3,12 @@
 Run with::
 
     cd solutions
-    python -m augmentation_agent --mas-endpoint <endpoint-name>
+    python -m augmentation_agent --supervisor-endpoint <endpoint-name>
 
 The script orchestrates five steps:
 
 1. Verify Databricks authentication.
-2. Configure DSPy with the MAS endpoint (BaseLM, model_type=responses).
+2. Configure DSPy with the Supervisor Agent endpoint (BaseLM, model_type=responses).
 3. Query the Supervisor Agent for gap analysis.
 4. Run four DSPy analyses concurrently via ``dspy.Parallel``.
 5. Validate and display the structured results.
@@ -31,7 +31,7 @@ from augmentation_agent.analyzers import (
     ImpliedRelationshipsAnalyzer,
 )
 from augmentation_agent.lm import configure_dspy
-from augmentation_agent.mas_client import fetch_gap_analysis
+from augmentation_agent.supervisor_client import fetch_gap_analysis
 from augmentation_agent.reporting import (
     ValidationHarness,
     print_analysis_result,
@@ -53,9 +53,9 @@ def _parse_args() -> argparse.Namespace:
         description="Lab 7: Graph Augmentation Agent (DSPy)",
     )
     p.add_argument(
-        "--mas-endpoint",
+        "--supervisor-endpoint",
         default=DEFAULT_ENDPOINT,
-        help="MAS endpoint name from Lab 6",
+        help="Supervisor Agent endpoint name from Lab 6",
     )
     p.add_argument("--temperature", type=float, default=0.1)
     p.add_argument("--max-tokens", type=int, default=4000)
@@ -113,7 +113,7 @@ def main() -> None:
     print("=" * 60)
     print("Lab 7: Graph Augmentation Agent (DSPy)")
     print("=" * 60)
-    print(f"  Endpoint:    {args.mas_endpoint}")
+    print(f"  Endpoint:    {args.supervisor_endpoint}")
     print(f"  Temperature: {args.temperature}")
     print(f"  Max tokens:  {args.max_tokens}")
     print()
@@ -136,7 +136,7 @@ def main() -> None:
     print("\nStep 2: Configure DSPy")
     try:
         configure_dspy(
-            args.mas_endpoint,
+            args.supervisor_endpoint,
             temperature=args.temperature,
             max_tokens=args.max_tokens,
         )
@@ -146,19 +146,19 @@ def main() -> None:
         harness.print_summary()
         sys.exit(1)
 
-    # ── Step 3: Gap analysis via MAS ──────────────────────────────────
+    # ── Step 3: Gap analysis via Supervisor Agent ─────────────────────
 
-    print("\nStep 3: Query MAS for Gap Analysis")
+    print("\nStep 3: Query Supervisor Agent for Gap Analysis")
     try:
-        gap_analysis = fetch_gap_analysis(args.mas_endpoint)
+        gap_analysis = fetch_gap_analysis(args.supervisor_endpoint)
         harness.record(
-            "mas_gap_analysis",
+            "supervisor_gap_analysis",
             len(gap_analysis) > 100,
             f"{len(gap_analysis):,} chars",
         )
         print(f"  Preview: {gap_analysis[:200]}...")
     except Exception as e:
-        harness.record("mas_gap_analysis", False, str(e))
+        harness.record("supervisor_gap_analysis", False, str(e))
         harness.print_summary()
         sys.exit(1)
 

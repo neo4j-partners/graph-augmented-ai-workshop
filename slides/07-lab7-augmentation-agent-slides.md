@@ -57,16 +57,16 @@ Build a **DSPy Agent** that uses the Supervisor Agent to **analyze documents** a
 ## Data Flow: Two-Stage Analysis
 
 ```
-MAS Query (one time)          →    Same gap_analysis data    →    4 Different Analyzers
+Supervisor Agent Query (one time) →  Same gap_analysis data    →    4 Different Analyzers
 ┌─────────────────────────┐        ┌───────────────────-┐        ┌─────────────────────────┐
 │ fetch_gap_analysis()    │   →    │  gap_analysis      │   →    │ Each analyzer extracts  │
 │ Returns customer gaps   │        │  (raw gap analysis)│        │ different insights      │
 └─────────────────────────┘        └──────────────────-─┘        └─────────────────────────┘
 ```
 
-**Stage 1: MAS Query (Direct API Call)**
+**Stage 1: Supervisor Agent Query (Direct API Call)**
 - Sends comprehensive prompt to Supervisor Agent
-- MAS coordinates Genie (structured) + Knowledge Assistant (documents)
+- Supervisor Agent coordinates Genie (structured) + Knowledge Assistant (documents)
 - Returns **raw text** analysis comparing both sources
 
 **Stage 2: DSPy Analyzers (Structured Extraction)**

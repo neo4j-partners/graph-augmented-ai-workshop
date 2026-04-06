@@ -6,7 +6,7 @@ A standalone DSPy demo that analyzes unstructured documents through a Databricks
 
 ```bash
 cd solutions
-python -m augmentation_agent --mas-endpoint <your-mas-endpoint>
+python -m augmentation_agent --supervisor-endpoint <your-supervisor-agent-endpoint>
 ```
 
 The agent runs a five-step pipeline: authenticate with Databricks, configure DSPy, query the Supervisor Agent for a gap analysis, run four concurrent DSPy analyses against the gap text, and validate the structured results.
@@ -20,7 +20,7 @@ The agent runs a five-step pipeline: authenticate with Databricks, configure DSP
 ### CLI Options
 
 ```
---mas-endpoint   MAS serving endpoint name (default: mas-3ae5a347-endpoint)
+--supervisor-endpoint   Supervisor Agent endpoint name (default: mas-3ae5a347-endpoint)
 --temperature    LM temperature (default: 0.1)
 --max-tokens     Maximum response tokens (default: 4000)
 ```
@@ -59,7 +59,7 @@ Unstructured Documents + Graph Data
   └── InvestmentTheme[]
 ```
 
-The MAS query takes 1-3 minutes. The four DSPy analyses run concurrently via `dspy.Parallel` and typically complete in 30-60 seconds total.
+The Supervisor Agent query takes 1-3 minutes. The four DSPy analyses run concurrently via `dspy.Parallel` and typically complete in 30-60 seconds total.
 
 ### Module Responsibilities
 
@@ -69,8 +69,8 @@ The package splits into six modules, each with a single concern:
 |---|---|
 | `schemas.py` | Pydantic models for all structured output. No DSPy dependency. |
 | `signatures.py` | DSPy `Signature` classes that pair input fields with Pydantic output types. |
-| `lm.py` | `DatabricksResponsesLM`, a custom `dspy.BaseLM` subclass for MAS endpoints. |
-| `mas_client.py` | Plain Databricks SDK calls to query the Supervisor Agent. No DSPy dependency. |
+| `lm.py` | `DatabricksResponsesLM`, a custom `dspy.BaseLM` subclass for Supervisor Agent endpoints. |
+| `supervisor_client.py` | Plain Databricks SDK calls to query the Supervisor Agent. No DSPy dependency. |
 | `analyzers.py` | DSPy `Module` classes wrapping `ChainOfThought` predictors, plus the composite `GraphAugmentationAnalyzer` orchestrator. |
 | `reporting.py` | Pretty-printing and the `ValidationHarness` for PASS/FAIL output. |
 
@@ -111,7 +111,7 @@ DSPy handles prompt construction and response parsing automatically. The signatu
 
 ### Step 3: The Custom LM Adapter Speaks Responses API
 
-The Databricks MAS endpoint uses the OpenAI Responses API format (`input` array, not `messages`), and it only supports single-turn conversations. `DatabricksResponsesLM` in `lm.py` handles both constraints.
+The Databricks Supervisor Agent endpoint uses the OpenAI Responses API format (`input` array, not `messages`), and it only supports single-turn conversations. `DatabricksResponsesLM` in `lm.py` handles both constraints.
 
 The class extends `dspy.BaseLM` and overrides `forward()`, which is the documented extension point in DSPy 3.x. It does not override `__call__()`. This distinction matters: `BaseLM.__call__` is decorated with `@with_callbacks` and routes the return value through `_process_lm_response()` for caching, history tracking, and usage metrics. Overriding `__call__` would silently bypass all of that.
 
@@ -126,7 +126,7 @@ class DatabricksResponsesLM(dspy.BaseLM):
         # Return raw OpenAI response object
 ```
 
-Setting `model_type="responses"` tells DSPy to route output extraction through `_process_response()` instead of `_process_completion()`, matching the response shape that the MAS endpoint returns.
+Setting `model_type="responses"` tells DSPy to route output extraction through `_process_response()` instead of `_process_completion()`, matching the response shape that the Supervisor Agent endpoint returns.
 
 `configure_dspy()` creates the LM and calls `dspy.configure(lm=lm, track_usage=True)`. `ChatAdapter` is the default adapter in DSPy 3.x and does not need to be set explicitly.
 
@@ -172,9 +172,9 @@ results = parallel(exec_pairs)
 
 After all analyses complete, `_consolidate()` merges the individual results into a single `AugmentationResponse` with aggregated suggestion lists and computed statistics.
 
-### Step 6: The MAS Client Queries for Gap Analysis
+### Step 6: The Supervisor Agent Client Queries for Gap Analysis
 
-`mas_client.py` is independent of DSPy. It sends a comprehensive four-part gap analysis prompt to the MAS endpoint using the Databricks SDK's OpenAI-compatible client. The prompt asks the supervisor to compare structured graph holdings against unstructured document content, identifying gaps in customer interests, missing entity relationships, absent customer attributes, and investment themes.
+`supervisor_client.py` is independent of DSPy. It sends a comprehensive four-part gap analysis prompt to the Supervisor Agent endpoint using the Databricks SDK's OpenAI-compatible client. The prompt asks the supervisor to compare structured graph holdings against unstructured document content, identifying gaps in customer interests, missing entity relationships, absent customer attributes, and investment themes.
 
 The returned text (typically 2,000-5,000 characters) becomes the `document_context` input to all four DSPy analyzers.
 
@@ -192,7 +192,7 @@ This implementation follows several patterns recommended for DSPy 3.x:
 
 ## Limitations
 
-The MAS endpoint is the bottleneck. Each gap analysis query takes 1-3 minutes because the supervisor coordinates multiple sub-agents. The DSPy analyses themselves are fast by comparison, but they depend entirely on the quality and completeness of the gap text the MAS returns.
+The Supervisor Agent endpoint is the bottleneck. Each gap analysis query takes 1-3 minutes because the supervisor coordinates multiple sub-agents. The DSPy analyses themselves are fast by comparison, but they depend entirely on the quality and completeness of the gap text the Supervisor Agent returns.
 
 The four analyses run independently against the same input text. They do not cross-reference each other's findings. A suggested `INTERESTED_IN` relationship from the relationships analyzer and a suggested `InvestmentInterest` node from the entities analyzer might overlap without either being aware of the other. Downstream consumers should deduplicate.
 

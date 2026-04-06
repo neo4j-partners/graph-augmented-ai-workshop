@@ -1,11 +1,11 @@
 """
 Supervisor Agent Client for Graph Augmentation Analysis.
 
-This module queries the Supervisor Agent (MAS) endpoint from Lab 6
+This module queries the Supervisor Agent endpoint from Lab 6
 to perform gap analysis between structured graph data (via Genie) and
 unstructured documents (via Knowledge Assistant).
 
-The MAS coordinates both agents to answer questions that span the
+The Supervisor Agent coordinates both agents to answer questions that span the
 structured-unstructured divide, which is the core capability needed
 for graph augmentation.
 
@@ -34,14 +34,15 @@ from dotenv import load_dotenv
 PROJECT_ROOT: Final[Path] = Path(__file__).parent.parent.parent
 load_dotenv(PROJECT_ROOT / ".env", override=True)
 
-# Default MAS endpoint name (from Lab 6)
-DEFAULT_ENDPOINT: Final[str] = os.environ.get("MAS_ENDPOINT_NAME", "mas-3ae5a347-endpoint")
+# Default Supervisor Agent endpoint name (from Lab 6)
+# Note: Databricks uses the "mas-" prefix in endpoint names (Multi-Agent Supervisor)
+DEFAULT_ENDPOINT: Final[str] = os.environ.get("SUPERVISOR_AGENT_ENDPOINT", "mas-3ae5a347-endpoint")
 
 
 # =============================================================================
 # GAP ANALYSIS QUERIES
-# These queries leverage the MAS to combine structured data (Genie) with
-# unstructured documents (Knowledge Assistant) to find enrichment opportunities.
+# These queries leverage the Supervisor Agent to combine structured data (Genie)
+# with unstructured documents (Knowledge Assistant) to find enrichment opportunities.
 # =============================================================================
 
 INTEREST_HOLDING_GAP_QUERY: Final[str] = """
@@ -175,22 +176,22 @@ class GapAnalysisResult:
     error: str | None = None
 
 
-class MASClient:
+class SupervisorAgentClient:
     """
     Client for querying the Supervisor Agent endpoint.
 
-    The MAS coordinates Genie (structured data) and Knowledge Assistant
-    (unstructured documents) to answer questions that span both data types.
-    This is essential for graph augmentation, which requires comparing
-    what's in the graph against what's in the documents.
+    The Supervisor Agent coordinates Genie (structured data) and Knowledge
+    Assistant (unstructured documents) to answer questions that span both
+    data types. This is essential for graph augmentation, which requires
+    comparing what's in the graph against what's in the documents.
     """
 
     def __init__(self, endpoint_name: str | None = None) -> None:
         """
-        Initialize the MAS client.
+        Initialize the Supervisor Agent client.
 
         Args:
-            endpoint_name: The MAS endpoint name from Lab 6.
+            endpoint_name: The Supervisor Agent endpoint name from Lab 6.
                           Uses DEFAULT_ENDPOINT if not specified.
         """
         self.endpoint_name = endpoint_name or DEFAULT_ENDPOINT
@@ -212,13 +213,13 @@ class MASClient:
 
     def query(self, prompt: str) -> str:
         """
-        Query the MAS endpoint with a prompt.
+        Query the Supervisor Agent endpoint with a prompt.
 
         Args:
-            prompt: The query to send to the MAS.
+            prompt: The query to send to the Supervisor Agent.
 
         Returns:
-            The text response from the MAS.
+            The text response from the Supervisor Agent.
 
         Raises:
             RuntimeError: If the query fails.
@@ -232,7 +233,7 @@ class MASClient:
             )
             return response.output[0].content[0].text
         except Exception as e:
-            raise RuntimeError(f"MAS query failed: {e}")
+            raise RuntimeError(f"Supervisor Agent query failed: {e}")
 
     def analyze_interest_holding_gaps(self) -> GapAnalysisResult:
         """
@@ -360,30 +361,30 @@ def fetch_gap_analysis(endpoint_name: str | None = None) -> str:
     """
     Fetch comprehensive gap analysis from the Supervisor Agent.
 
-    This queries the MAS to identify gaps between structured graph data
+    This queries the Supervisor Agent to identify gaps between structured graph data
     and unstructured documents - the core input for graph augmentation.
 
     Args:
-        endpoint_name: The MAS endpoint name. Uses DEFAULT_ENDPOINT if not specified.
+        endpoint_name: The Supervisor Agent endpoint name. Uses DEFAULT_ENDPOINT if not specified.
 
     Returns:
         Comprehensive gap analysis text for graph augmentation.
 
     Example:
-        >>> from lab_7_augmentation_agent.dspy_modules.mas_client import fetch_gap_analysis
+        >>> from lab_7_augmentation_agent.dspy_modules.supervisor_client import fetch_gap_analysis
         >>> analysis = fetch_gap_analysis()
         >>> print(f"Retrieved {len(analysis)} characters of gap analysis")
     """
     print("\n" + "=" * 60)
     print("STEP 1: QUERYING MULTI-AGENT SUPERVISOR FOR GAP ANALYSIS")
     print("=" * 60)
-    print("  The MAS coordinates Genie (structured data) and")
+    print("  The Supervisor Agent coordinates Genie (structured data) and")
     print("  Knowledge Assistant (documents) to find enrichment opportunities.")
-    print("  This may take 1-3 minutes as the MAS routes to multiple agents...")
+    print("  This may take 1-3 minutes as the Supervisor Agent routes to multiple agents...")
     print("")
 
     start_time = time.time()
-    client = MASClient(endpoint_name)
+    client = SupervisorAgentClient(endpoint_name)
     result = client.run_comprehensive_analysis()
     elapsed = time.time() - start_time
 

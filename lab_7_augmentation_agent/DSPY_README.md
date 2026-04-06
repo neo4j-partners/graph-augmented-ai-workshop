@@ -21,7 +21,7 @@ Ensure your `.env` file contains:
 ```
 DATABRICKS_HOST=https://your-workspace.cloud.databricks.com
 DATABRICKS_TOKEN=your-personal-access-token
-MAS_ENDPOINT_NAME=your-mas-endpoint
+SUPERVISOR_AGENT_ENDPOINT=your-supervisor-agent-endpoint
 ```
 
 ## Databricks Cluster Dependencies
@@ -96,10 +96,10 @@ class NewEntitiesAnalyzer(dspy.Module):
 
 ### Custom LM Adapter for Supervisor Agent
 
-The agent includes a custom `DatabricksResponsesLM` class that works with Supervisor Agent (MAS) endpoints. MAS endpoints use the Databricks Responses API format instead of OpenAI Chat Completions:
+The agent includes a custom `DatabricksResponsesLM` class that works with Supervisor Agent endpoints. Supervisor Agent endpoints use the Databricks Responses API format instead of OpenAI Chat Completions:
 
 ```python
-# Responses API format (MAS endpoints)
+# Responses API format (Supervisor Agent endpoints)
 client.responses.create(
     model="mas-endpoint",
     input=[{"role": "user", "content": "..."}]
@@ -112,7 +112,7 @@ client.chat.completions.create(
 )
 ```
 
-The `DatabricksResponsesLM` adapter handles this conversion automatically. This implementation only supports MAS endpoints.
+The `DatabricksResponsesLM` adapter handles this conversion automatically. This implementation only supports Supervisor Agent endpoints.
 
 ## Comparison with Original Agent
 
@@ -150,36 +150,36 @@ If DSPy fails to parse structured output, it will retry automatically. For persi
 1. Simplify the Pydantic schema (reduce nesting depth to 2-3 levels)
 2. Add clearer `Field(description=...)` hints for complex fields
 3. Check MLflow traces to see what the model is actually returning
-4. Ensure your MAS endpoint is responding correctly (test with a simple query first)
+4. Ensure your Supervisor Agent endpoint is responding correctly (test with a simple query first)
 
 ## Best Practices for DSPy with Supervisor Agent
 
-When building DSPy agents that use Databricks Supervisor Agent (MAS) endpoints for structured output, follow these best practices:
+When building DSPy agents that use Databricks Supervisor Agent endpoints for structured output, follow these best practices:
 
-### 1. Use the Custom LM Adapter for MAS
+### 1. Use the Custom LM Adapter for Supervisor Agent
 
-MAS endpoints use the Databricks Responses API format, not OpenAI Chat Completions. Always use the `DatabricksResponsesLM` adapter:
+Supervisor Agent endpoints use the Databricks Responses API format, not OpenAI Chat Completions. Always use the `DatabricksResponsesLM` adapter:
 
 ```python
 from lab_7_augmentation_agent.dspy_modules.config import configure_dspy
 
-# This automatically uses DatabricksResponsesLM for MAS endpoints
-lm = configure_dspy(model_name="your-mas-endpoint")
+# This automatically uses DatabricksResponsesLM for Supervisor Agent endpoints
+lm = configure_dspy(model_name="your-supervisor-agent-endpoint")
 ```
 
-**Do NOT** use `dspy.LM` or `dspy.OpenAI` directly with MAS endpoints—they send the wrong API format.
+**Do NOT** use `dspy.LM` or `dspy.OpenAI` directly with Supervisor Agent endpoints—they send the wrong API format.
 
 ### 2. Use ChatAdapter, Not JSONAdapter
 
-MAS endpoints require `ChatAdapter` for structured output. JSONAdapter is not supported:
+Supervisor Agent endpoints require `ChatAdapter` for structured output. JSONAdapter is not supported:
 
 ```python
 import dspy
 
-# Correct for MAS
+# Correct for Supervisor Agent
 adapter = dspy.ChatAdapter()
 
-# Wrong - will fail with MAS
+# Wrong - will fail with Supervisor Agent
 # adapter = dspy.JSONAdapter()
 ```
 
@@ -313,14 +313,14 @@ View traces in the MLflow UI to debug prompt/response issues.
 For demos and production code, avoid unnecessary configuration options:
 
 ```python
-# Good - simple, MAS-only
+# Good - simple, Supervisor Agent-only
 def configure_dspy(model_name: str, temperature: float = 0.1):
     lm = DatabricksResponsesLM(model=model_name, temperature=temperature)
     dspy.configure(lm=lm, adapter=dspy.ChatAdapter())
 
 # Bad - too many options that can cause errors
 def configure_dspy(model_name, use_json_adapter=False, use_responses_api=True, ...):
-    if use_json_adapter:  # This will fail with MAS anyway
+    if use_json_adapter:  # This will fail with Supervisor Agent anyway
         ...
 ```
 
@@ -335,7 +335,7 @@ uv run python -m lab_7_augmentation_agent.agent_dspy
 # Same code runs on Databricks via notebook or IDE plugin
 ```
 
-### Summary: MAS + DSPy Architecture
+### Summary: Supervisor Agent + DSPy Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐

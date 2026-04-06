@@ -26,12 +26,12 @@ Required `.env` variables:
 |----------|-------------|
 | `DATABRICKS_PROFILE` | CLI profile name (`databricks configure --profile <name>`) |
 | `DATABRICKS_CLUSTER_ID` | Existing all-purpose cluster ID |
-| `WORKSPACE_DIR` | Remote path for uploaded scripts (e.g., `/Workspace/Users/you@example.com/graph_validation`) |
+| `DATABRICKS_WORKSPACE_DIR` | Remote path for uploaded scripts (e.g., `/Workspace/Users/you@example.com/graph_validation`) |
 | `NEO4J_URI` | Neo4j connection URI |
 | `NEO4J_USERNAME` | Neo4j username |
 | `NEO4J_PASSWORD` | Neo4j password |
-| `VOLUME_PATH` | Unity Catalog Volume path (e.g., `/Volumes/catalog/schema/volume`) |
-| `MAS_ENDPOINT_NAME` | Supervisor Agent endpoint name from Lab 6 (for Lab 7) |
+| `DATABRICKS_VOLUME_PATH` | Unity Catalog Volume path (e.g., `/Volumes/catalog/schema/volume`) |
+| `SUPERVISOR_AGENT_ENDPOINT` | Supervisor Agent endpoint name from Lab 6 (for Lab 7) |
 
 ## Usage
 
@@ -85,7 +85,7 @@ python -m cli clean --runs                # only delete job run history
 | `verify_lab2.py` | Lab 2 | No | Read-only verification of node counts, relationship counts, constraints, and sample queries |
 | `run_lab3.py` | Lab 3 | Yes | Clears Document/Chunk nodes, loads pre-computed embeddings JSON (14 docs, 20 chunks, 1024-dim), writes Document and Chunk nodes to Neo4j, creates vector and fulltext indexes, verifies search |
 | `run_lab4.py` | Lab 4 | No | Reads nodes and relationships from Neo4j via Spark Connector, writes 14 Delta tables to Unity Catalog, verifies row counts |
-| `run_lab7.py` | Lab 7 | No | Queries MAS for gap analysis, runs 4 DSPy analyses (investment themes, new entities, missing attributes, implied relationships) concurrently via `dspy.Parallel`, validates structured Pydantic output |
+| `run_lab7.py` | Lab 7 | No | Queries Supervisor Agent for gap analysis, runs 4 DSPy analyses (investment themes, new entities, missing attributes, implied relationships) concurrently via `dspy.Parallel`, validates structured Pydantic output |
 
 ### Execution Order
 
@@ -98,7 +98,7 @@ run_lab2.py         # 3. import data (clears Neo4j)
 verify_lab2.py      # 4. verify import
 run_lab3.py         # 5. vector pipeline (clears doc nodes)
 run_lab4.py         # 6. export to Delta Lake
-run_lab7.py         # 7. DSPy augmentation agent (requires MAS from Lab 6)
+run_lab7.py         # 7. DSPy augmentation agent (requires Supervisor Agent from Lab 6)
 ```
 
 ## How It Works

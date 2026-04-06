@@ -91,7 +91,7 @@ After this notebook completes, Neo4j has the full graph and you're ready for the
 ## Project Structure
 
 ```
-graph-augmented-ai-workshop/
+graph-enrichment/
 ├── labs/
 │   ├── 0 - Required Setup.py                 # Environment setup notebook
 │   ├── 1 - Neo4j Import.py                   # Single-step Neo4j data import

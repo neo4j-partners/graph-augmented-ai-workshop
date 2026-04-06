@@ -6,11 +6,15 @@ build-backend = "setuptools.build_meta"
 name = "augmentation_agent"
 version = "0.1.0"
 description = "Lab 7: Graph Augmentation Agent — DSPy structured analysis for Neo4j enrichment"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "dspy>=3.0.4",
     "databricks-sdk",
     "pydantic>=2.0",
+]
+
+[dependency-groups]
+dev = [
     "databricks-job-runner",
 ]
 

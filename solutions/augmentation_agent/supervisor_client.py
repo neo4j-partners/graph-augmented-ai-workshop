@@ -1,6 +1,6 @@
 """Supervisor Agent client for gap analysis.
 
-This module queries the MAS endpoint created in Lab 6 to compare
+This module queries the Supervisor Agent endpoint created in Lab 6 to compare
 structured graph data (via Genie) with unstructured documents (via
 Knowledge Assistant).  The result is a text-based gap analysis that serves
 as input to the DSPy analyzers.
@@ -59,8 +59,8 @@ def _get_responses_client(endpoint_name: str | None = None) -> tuple[Any, str]:
     return client, endpoint_name or ""
 
 
-def query_mas(endpoint_name: str, prompt: str | None = None) -> str:
-    """Send a single query to the MAS endpoint.
+def query_supervisor_agent(endpoint_name: str, prompt: str | None = None) -> str:
+    """Send a single query to the Supervisor Agent endpoint.
 
     Args:
         endpoint_name: Serving-endpoint name from Lab 6.
@@ -68,7 +68,7 @@ def query_mas(endpoint_name: str, prompt: str | None = None) -> str:
             gap analysis query.
 
     Returns:
-        The text response from the MAS.
+        The text response from the Supervisor Agent.
     """
     client, _ = _get_responses_client()
     response = client.responses.create(
@@ -79,19 +79,19 @@ def query_mas(endpoint_name: str, prompt: str | None = None) -> str:
 
 
 def fetch_gap_analysis(endpoint_name: str) -> str:
-    """High-level helper: query MAS and return the gap analysis text.
+    """High-level helper: query Supervisor Agent and return the gap analysis text.
 
     Prints progress banners that match the workshop's output style.
     """
     print("\n" + "=" * 60)
-    print("QUERYING MULTI-AGENT SUPERVISOR FOR GAP ANALYSIS")
+    print("QUERYING SUPERVISOR AGENT FOR GAP ANALYSIS")
     print("=" * 60)
-    print("  The MAS coordinates Genie (structured data) and")
+    print("  The Supervisor Agent coordinates Genie (structured data) and")
     print("  Knowledge Assistant (documents) to find enrichment opportunities.")
     print("  This may take 1-3 minutes ...\n")
 
     t0 = time.time()
-    text = query_mas(endpoint_name)
+    text = query_supervisor_agent(endpoint_name)
     elapsed = time.time() - t0
 
     print(f"  [OK] {len(text):,} chars in {elapsed:.1f}s")

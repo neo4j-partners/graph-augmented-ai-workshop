@@ -5,7 +5,7 @@ This package contains the DSPy-based components for structured output generation
 - config: Language model configuration for Databricks
 - signatures: DSPy signatures for each analysis type
 - analyzers: DSPy modules that perform the actual analysis
-- mas_client: Client for querying the Supervisor Agent
+- supervisor_client: Client for querying the Supervisor Agent
 """
 
 from lab_7_augmentation_agent.dspy_modules.config import (
@@ -14,8 +14,8 @@ from lab_7_augmentation_agent.dspy_modules.config import (
     setup_mlflow_tracing,
     DatabricksResponsesLM,
 )
-from lab_7_augmentation_agent.dspy_modules.mas_client import (
-    MASClient,
+from lab_7_augmentation_agent.dspy_modules.supervisor_client import (
+    SupervisorAgentClient,
     GapAnalysisResult,
     fetch_gap_analysis,
 )
@@ -44,8 +44,8 @@ __all__ = [
     "get_lm",
     "setup_mlflow_tracing",
     "DatabricksResponsesLM",
-    # MAS Client
-    "MASClient",
+    # Supervisor Agent Client
+    "SupervisorAgentClient",
     "GapAnalysisResult",
     "fetch_gap_analysis",
     # Signatures

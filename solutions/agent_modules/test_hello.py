@@ -29,9 +29,13 @@ try:
 except Exception as e:
     print(f"Spark not available: {e}")
 
-# Verify Neo4j Spark Connector jar is on the classpath
+# Verify Neo4j Spark Connector jar is on the classpath.
+# Use the thread context classloader — Spark loads user-attached libraries
+# into a child classloader that the default Class.forName() can't see.
 try:
-    spark._jvm.Class.forName("org.neo4j.spark.DataSource")
+    spark._jvm.java.lang.Thread.currentThread().getContextClassLoader().loadClass(
+        "org.neo4j.spark.DataSource"
+    )
     print("Neo4j Spark Connector: found on classpath")
 except Exception:
     print("Neo4j Spark Connector: NOT found — install the connector library on the cluster")

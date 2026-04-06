@@ -22,7 +22,7 @@ Ensure your `.env` file contains:
 ```
 DATABRICKS_HOST=https://your-workspace.cloud.databricks.com
 DATABRICKS_TOKEN=your-personal-access-token
-MAS_ENDPOINT_NAME=your-mas-endpoint
+SUPERVISOR_AGENT_ENDPOINT=your-supervisor-agent-endpoint
 ```
 
 ### Databricks Cluster Libraries

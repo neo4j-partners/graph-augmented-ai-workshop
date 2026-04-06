@@ -7,5 +7,5 @@ schema improvements for Neo4j using DSPy structured output.
 Quick start::
 
     cd solutions
-    python -m augmentation_agent --mas-endpoint <endpoint-name>
+    python -m augmentation_agent --supervisor-endpoint <endpoint-name>
 """

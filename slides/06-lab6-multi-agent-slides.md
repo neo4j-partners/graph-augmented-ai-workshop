@@ -78,4 +78,4 @@ table { font-size: 20px; }
 3. Combines responses
 4. Returns unified answer
 
-**Next:** Use the MAS for graph augmentation analysis
+**Next:** Use the Supervisor Agent for graph augmentation analysis

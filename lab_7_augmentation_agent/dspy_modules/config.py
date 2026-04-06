@@ -2,11 +2,11 @@
 DSPy Language Model Configuration for Databricks Supervisor Agent.
 
 This module handles the configuration of DSPy to work with Databricks
-Supervisor Agent (MAS) endpoints created in Lab 6. It supports both
+Supervisor Agent endpoints created in Lab 6. It supports both
 automatic authentication when running on Databricks and manual authentication
 via environment variables.
 
-The MAS endpoint routes queries to the Genie + Knowledge Assistant for combined
+The Supervisor Agent endpoint routes queries to the Genie + Knowledge Assistant for combined
 structured and unstructured data analysis.
 
 References:
@@ -39,9 +39,10 @@ for var in _CONFLICTING_AUTH_VARS:
     os.environ.pop(var, None)
 
 
-# Default MAS endpoint name (from Lab 6)
-# Override via MAS_ENDPOINT_NAME environment variable if needed
-DEFAULT_ENDPOINT: Final[str] = os.environ.get("MAS_ENDPOINT_NAME", "mas-3ae5a347-endpoint")
+# Default Supervisor Agent endpoint name (from Lab 6)
+# Override via SUPERVISOR_AGENT_ENDPOINT environment variable if needed
+# Note: Databricks uses the "mas-" prefix in endpoint names (Multi-Agent Supervisor)
+DEFAULT_ENDPOINT: Final[str] = os.environ.get("SUPERVISOR_AGENT_ENDPOINT", "mas-3ae5a347-endpoint")
 
 
 class DatabricksResponsesLM(dspy.BaseLM):
@@ -53,11 +54,11 @@ class DatabricksResponsesLM(dspy.BaseLM):
     correctly.  Uses ``model_type="responses"`` so the base class routes
     output extraction through ``_process_response()``.
 
-    The MAS endpoint uses the Responses API format::
+    The Supervisor Agent endpoint uses the Responses API format::
 
         POST /responses  {"input": [{"role": "user", "content": "..."}]}
 
-    MAS endpoints only support single-turn conversations, so multi-turn
+    Supervisor Agent endpoints only support single-turn conversations, so multi-turn
     messages produced by DSPy's ChatAdapter are combined into one user
     message before sending.
 
@@ -75,7 +76,7 @@ class DatabricksResponsesLM(dspy.BaseLM):
         Initialize the Databricks Responses API LM.
 
         Args:
-            model: The Databricks MAS endpoint name from Lab 6.
+            model: The Databricks Supervisor Agent endpoint name from Lab 6.
             **kwargs: Additional arguments (temperature, max_tokens, etc.)
         """
         self._client: Any = None
@@ -105,7 +106,7 @@ class DatabricksResponsesLM(dspy.BaseLM):
         **kwargs: Any,
     ) -> Any:
         """
-        Call the MAS endpoint and return the raw OpenAI response object.
+        Call the Supervisor Agent endpoint and return the raw OpenAI response object.
 
         BaseLM.__call__ (with @with_callbacks) invokes this method, then
         passes the return value through _process_lm_response() for history
@@ -122,7 +123,7 @@ class DatabricksResponsesLM(dspy.BaseLM):
         """
         client = self._get_client()
 
-        # Combine multi-turn messages into a single user message for MAS
+        # Combine multi-turn messages into a single user message for Supervisor Agent
         if messages:
             parts = []
             for msg in messages:
@@ -145,7 +146,7 @@ class DatabricksResponsesLM(dspy.BaseLM):
             input=input_messages,
         )
 
-        # Ensure usage is present — MAS endpoints may not return token counts,
+        # Ensure usage is present — Supervisor Agent endpoints may not return token counts,
         # but BaseLM._process_lm_response() calls dict(response.usage).
         if not hasattr(response, "usage") or response.usage is None:
             response.usage = SimpleNamespace(
@@ -161,10 +162,10 @@ def get_lm(
     max_tokens: int = 4000,
 ) -> DatabricksResponsesLM:
     """
-    Create a DSPy Language Model configured for Databricks MAS endpoint.
+    Create a DSPy Language Model configured for Databricks Supervisor Agent endpoint.
 
     This function ONLY supports Supervisor Agent endpoints from Lab 6.
-    The MAS endpoint uses the Databricks Responses API format, which requires
+    The Supervisor Agent endpoint uses the Databricks Responses API format, which requires
     a custom LM adapter (DatabricksResponsesLM).
 
     Authentication is handled automatically by WorkspaceClient:
@@ -172,19 +173,19 @@ def get_lm(
     - Locally: Uses DATABRICKS_HOST and DATABRICKS_TOKEN from .env
 
     Args:
-        model_name: The MAS endpoint name from Lab 6. If None, uses DEFAULT_ENDPOINT.
+        model_name: The Supervisor Agent endpoint name from Lab 6. If None, uses DEFAULT_ENDPOINT.
         temperature: Sampling temperature (0.0-1.0). Lower = more deterministic.
         max_tokens: Maximum tokens in the response.
 
     Returns:
-        Configured DatabricksResponsesLM instance for MAS endpoint.
+        Configured DatabricksResponsesLM instance for the Supervisor Agent endpoint.
 
     Raises:
         RuntimeError: If Databricks authentication fails.
     """
     endpoint = model_name or DEFAULT_ENDPOINT
 
-    # DatabricksResponsesLM is specifically designed for MAS endpoints
+    # DatabricksResponsesLM is specifically designed for Supervisor Agent endpoints
     # which use the Responses API format (not OpenAI Chat Completions)
     lm = DatabricksResponsesLM(
         model=endpoint,
@@ -202,7 +203,7 @@ def configure_dspy(
     track_usage: bool = True,
 ) -> DatabricksResponsesLM:
     """
-    Configure DSPy globally with the Databricks MAS endpoint.
+    Configure DSPy globally with the Databricks Supervisor Agent endpoint.
 
     This sets up the default LM for all DSPy operations.
     Call this once at application startup.
@@ -213,7 +214,7 @@ def configure_dspy(
     explicitly.
 
     Args:
-        model_name: The MAS endpoint name from Lab 6. If None, uses DEFAULT_ENDPOINT.
+        model_name: The Supervisor Agent endpoint name from Lab 6. If None, uses DEFAULT_ENDPOINT.
         temperature: Sampling temperature (0.0-1.0).
         max_tokens: Maximum tokens in the response.
         track_usage: If True, enable token usage tracking.

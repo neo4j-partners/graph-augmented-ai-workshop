@@ -1,5 +1,5 @@
 [project]
-name = "graph-augmented-ai-workshop"
+name = "graph-enrichment"
 version = "0.1.0"
 description = "Hands-on workshop for building graph-augmented AI systems with Neo4j and Databricks"
 requires-python = ">=3.10"
