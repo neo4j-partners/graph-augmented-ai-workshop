@@ -63,7 +63,7 @@
 # MAGIC 3. Generate a vector embedding for each chunk via the Databricks embedding endpoint
 # MAGIC 4. Save everything to a JSON file that ships with the workshop
 # MAGIC
-# MAGIC The generation script lives in `lab_setup/generate_embeddings.py` if you want to see
+# MAGIC The generation script lives in `workshop_admin/agent_modules/generate_embeddings.py` if you want to see
 # MAGIC exactly how it works or regenerate the embeddings with a different model.
 
 # COMMAND ----------
@@ -126,7 +126,7 @@ run_full_import()
 # MAGIC
 # MAGIC The graph is fully loaded. Continue to:
 # MAGIC
-# MAGIC - **Lab 4**: Export Neo4j data back to Delta Lake tables for use with Databricks AI agents
-# MAGIC - **Lab 5**: Create Genie and Knowledge agents
-# MAGIC - **Lab 6**: Build a Supervisor Agent
-# MAGIC - **Lab 7**: Graph augmentation with DSPy
+# MAGIC - **4 - Neo4j to Lakehouse**: Export Neo4j data back to Delta Lake tables for use with Databricks AI agents
+# MAGIC - **5 - AI Agents**: Create Genie and Knowledge Assistant agents
+# MAGIC - **6 - Supervisor Agent**: Combine both agents into a unified multi-agent system
+# MAGIC - **7 - Augmentation Agent**: Graph augmentation with DSPy

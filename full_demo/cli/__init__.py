@@ -6,10 +6,25 @@ Thin wrapper around databricks-job-runner configured for this project.
 from databricks_job_runner import Runner, RunnerConfig
 
 
-def build_params(config: RunnerConfig) -> list[str]:
-    """Inject Neo4j credentials and workshop-specific settings."""
+def build_params(config: RunnerConfig, script: str) -> list[str]:
+    """Inject per-script parameters from .env config."""
     params: list[str] = []
     extras = config.extras
+
+    if script == "generate_embeddings.py":
+        if config.databricks_volume_path:
+            params += ["--volume-path", config.databricks_volume_path]
+            params += [
+                "--output-path",
+                config.databricks_volume_path
+                + "/embeddings/document_chunks_embedded.json",
+            ]
+        endpoint = extras.get("EMBEDDING_ENDPOINT")
+        if endpoint:
+            params += ["--endpoint", endpoint]
+        return params
+
+    # Lab scripts — Neo4j creds + volume + supervisor
     if extras.get("NEO4J_URI") and extras.get("NEO4J_PASSWORD"):
         params += [
             "--neo4j-uri", extras["NEO4J_URI"],

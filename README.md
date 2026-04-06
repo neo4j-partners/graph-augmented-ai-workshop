@@ -104,20 +104,17 @@ graph-enrichment/
 │           ├── csv/                           # Source CSV files (7 files)
 │           ├── html/                          # Source HTML documents (14 files)
 │           └── embeddings/                    # Pre-computed embedding vectors
-├── lab_4_neo4j_to_lakehouse/                  # Lab 4: Export to Lakehouse
-├── lab_5_ai_agents/                           # Lab 5: AI Agents
-├── lab_6_multi_agent/                         # Lab 6: Supervisor Agent
 ├── lab_7_augmentation_agent/                  # Lab 7: Graph Augmentation
-├── lab_setup/                                 # Tooling to regenerate embeddings
+├── workshop_admin/                            # Tooling to regenerate embeddings
 │   ├── agent_modules/
 │   │   └── generate_embeddings.py
 │   ├── upload.sh
 │   ├── submit.sh
 │   └── clean.sh
-├── solutions/                                 # Headless validation scripts
+├── full_demo/                                 # Reference implementation + validation scripts
 ├── docs/                                      # Reference documentation
 ├── slides/                                    # Marp presentations
-├── pyproject.toml                             # Python deps (solutions/ and lab_7 local dev)
+├── pyproject.toml                             # Python deps (full_demo/ and lab_7 local dev)
 └── README.md                                  # This file
 ```
 
@@ -135,8 +132,8 @@ The **ML Runtime** is recommended because it includes `pyyaml`, `neo4j`, and `be
 |---------|---------|
 | `pyyaml` | Setup notebook (reads config.yaml) |
 | `neo4j` | Import notebook (Neo4j Python driver for document graph) |
-| `beautifulsoup4` | Embedding generation (lab_setup only, not student-facing) |
-| `databricks-langchain` | Embedding generation (lab_setup only, not student-facing) |
+| `beautifulsoup4` | Embedding generation (workshop_admin only, not student-facing) |
+| `databricks-langchain` | Embedding generation (workshop_admin only, not student-facing) |
 
 ## Secrets Reference
 
