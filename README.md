@@ -105,13 +105,7 @@ graph-enrichment/
 │           ├── html/                          # Source HTML documents (14 files)
 │           └── embeddings/                    # Pre-computed embedding vectors
 ├── lab_7_augmentation_agent/                  # Lab 7: Graph Augmentation
-├── workshop_admin/                            # Tooling to regenerate embeddings
-│   ├── agent_modules/
-│   │   └── generate_embeddings.py
-│   ├── upload.sh
-│   ├── submit.sh
-│   └── clean.sh
-├── full_demo/                                 # Reference implementation + validation scripts
+├── full_demo/                                 # Reference implementation, validation scripts, and admin tools
 ├── docs/                                      # Reference documentation
 ├── slides/                                    # Marp presentations
 ├── pyproject.toml                             # Python deps (full_demo/ and lab_7 local dev)
@@ -132,8 +126,8 @@ The **ML Runtime** is recommended because it includes `pyyaml`, `neo4j`, and `be
 |---------|---------|
 | `pyyaml` | Setup notebook (reads config.yaml) |
 | `neo4j` | Import notebook (Neo4j Python driver for document graph) |
-| `beautifulsoup4` | Embedding generation (workshop_admin only, not student-facing) |
-| `databricks-langchain` | Embedding generation (workshop_admin only, not student-facing) |
+| `beautifulsoup4` | Embedding generation (`generate_embeddings.py`, not student-facing) |
+| `databricks-langchain` | Embedding generation (`generate_embeddings.py`, not student-facing) |
 
 ## Secrets Reference
 

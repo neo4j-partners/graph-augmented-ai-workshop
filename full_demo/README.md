@@ -15,7 +15,7 @@ Standalone Python scripts that validate the workshop labs by running them as one
 ## Setup
 
 ```bash
-cd solutions
+cd full_demo
 cp .env.example .env
 # Edit .env with your values
 ```
@@ -32,6 +32,7 @@ Required `.env` variables:
 | `NEO4J_PASSWORD` | Neo4j password |
 | `DATABRICKS_VOLUME_PATH` | Unity Catalog Volume path (e.g., `/Volumes/catalog/schema/volume`) |
 | `SUPERVISOR_AGENT_ENDPOINT` | Supervisor Agent endpoint name from Lab 6 (for Lab 7) |
+| `EMBEDDING_ENDPOINT` | Embedding model endpoint for `generate_embeddings.py` (optional, defaults to `databricks-gte-large-en`) |
 
 ## Usage
 
@@ -45,6 +46,7 @@ python -m cli submit run_lab2.py          # Lab 2 (destructive)
 python -m cli submit verify_lab2.py       # Lab 2 read-only verify
 python -m cli submit run_lab3.py          # Lab 3 (destructive for doc nodes)
 python -m cli submit run_lab4.py          # Lab 4
+python -m cli submit generate_embeddings.py # regenerate embeddings (admin)
 ```
 
 Upload a single script:
@@ -76,6 +78,7 @@ python -m cli clean --runs                # only delete job run history
 |--------|-------------|
 | `test_hello.py` | Smoke test — verifies Python, Spark, and the Neo4j Spark Connector are available |
 | `check_neo4j.py` | Connectivity check — verifies Neo4j is reachable, reports node count and server version |
+| `generate_embeddings.py` | Reads HTML files from the volume, chunks text, generates embeddings via Databricks endpoint, writes JSON output |
 
 ### Lab Validation
 
