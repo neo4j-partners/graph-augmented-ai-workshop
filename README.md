@@ -1,3 +1,7 @@
+[![Databricks](https://img.shields.io/badge/Databricks-Solution_Accelerator-FF3621?style=for-the-badge&logo=databricks)](https://databricks.com)
+[![Unity Catalog](https://img.shields.io/badge/Unity_Catalog-Enabled-00A1C9?style=for-the-badge)](https://docs.databricks.com/en/data-governance/unity-catalog/index.html)
+[![Neo4j](https://img.shields.io/badge/Neo4j-Partner-4581C3?style=for-the-badge&logo=neo4j)](https://neo4j.com/partners/databricks/)
+
 # Graph Augmented AI Workshop
 
 A hands-on workshop for building graph-augmented AI systems using Neo4j and Databricks. This project demonstrates how to combine Neo4j's graph database capabilities with Databricks AI/BI agents to create a multi-agent architecture that bridges structured graph data and unstructured documents.
@@ -148,3 +152,27 @@ The `slides/` directory contains [Marp](https://marp.app/) presentations for eac
 npm install -g @marp-team/marp-cli
 marp slides --server
 ```
+
+## Project Support
+
+Please note the code in this project is provided for your exploration only, and are not formally supported by Databricks with Service Level Agreements (SLAs). They are provided AS-IS and we do not make any guarantees of any kind. Please do not submit a support ticket relating to any issues arising from the use of these projects. The source in this project is provided subject to the Databricks [License](./LICENSE.md). All included or referenced third party libraries are subject to the licenses set forth below.
+
+Any issues discovered through the use of this project should be filed as GitHub Issues on the Repo. They will be reviewed as time permits, but there are no formal SLAs for support.
+
+## Third-Party Package Licenses
+
+| library | description | license | source |
+|---------|-------------|---------|--------|
+| neo4j | Neo4j Python driver | Apache 2.0 | https://github.com/neo4j/neo4j-python-driver |
+| neo4j-connector-apache-spark | Neo4j Spark Connector | Apache 2.0 | https://github.com/neo4j/neo4j-spark-connector |
+| dspy | Structured reasoning framework | MIT | https://github.com/stanfordnlp/dspy |
+| langchain | LLM orchestration | MIT | https://github.com/langchain-ai/langchain |
+| langgraph | Agent workflow graphs | MIT | https://github.com/langchain-ai/langgraph |
+| databricks-langchain | Databricks LLM integration | Apache 2.0 | https://github.com/langchain-ai/langchain-databricks |
+| pydantic | Data validation | MIT | https://github.com/pydantic/pydantic |
+| mlflow | ML experiment tracking | Apache 2.0 | https://github.com/mlflow/mlflow |
+| beautifulsoup4 | HTML parsing | MIT | https://www.crummy.com/software/BeautifulSoup/ |
+| pyyaml | YAML parsing | MIT | https://github.com/yaml/pyyaml |
+| sentence-transformers | Embedding models | Apache 2.0 | https://github.com/UKPLab/sentence-transformers |
+
+&copy; 2026 Databricks, Inc. All rights reserved. The source in this notebook is provided subject to the [Databricks License](https://databricks.com/db-license-source). All included or referenced third party libraries are subject to the licenses set forth above.
