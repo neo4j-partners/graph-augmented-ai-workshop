@@ -9,5 +9,4 @@ from databricks_job_runner import Runner
 
 runner = Runner(
     run_name_prefix="graph_validation",
-    wheel_package="augmentation_agent",
 )

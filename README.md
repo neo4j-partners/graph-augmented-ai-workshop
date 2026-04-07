@@ -122,9 +122,7 @@ graph-enrichment/
 │           ├── html/                          # Source HTML documents (14 files)
 │           └── embeddings/                    # Pre-computed embedding vectors
 ├── lab_7_augmentation_agent/                  # Lab 7: Graph Augmentation
-├── full_demo/                                 # Reference implementation, admin tools, and DBC publishing
-│   ├── build_dbc.py                           # Package labs/ into a .dbc archive
-│   └── publish_dbc.py                         # Build + upload .dbc to S3
+├── full_demo/                                 # Augmentation agent + validation scripts
 ├── docs/                                      # Reference documentation
 ├── slides/                                    # Marp presentations
 ├── pyproject.toml                             # Python deps (full_demo/ and lab_7 local dev)
@@ -157,20 +155,6 @@ The setup notebook creates a `neo4j-creds` secret scope with:
 | `password` | Neo4j password | `your_password` |
 | `url` | Neo4j connection URI | `neo4j+s://xxx.databases.neo4j.io` |
 | `volume_path` | Databricks volume path | `/Volumes/neo4j_workshop_user/raw_data/source_files` |
-
-## Publishing the DBC (Instructor/Admin)
-
-The lab notebooks are distributed as a `.dbc` archive hosted on S3. To rebuild and publish after making changes:
-
-```bash
-# Build and upload to S3 (requires AWS credentials)
-uv run --script full_demo/publish_dbc.py
-
-# Build only (no upload)
-uv run --script full_demo/publish_dbc.py --build
-```
-
-This creates the `neo4jgraphenrichment` S3 bucket if needed, uploads `labs.dbc` with public-read access, and prints the import URL for participants.
 
 ## Slides
 
